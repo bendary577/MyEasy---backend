@@ -4,14 +4,12 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 use Spatie\Permission\PermissionRegistrar;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class CreatePermissionTables extends Migration
 {
-    /**
-     * Run the migrations.
-     *
-     * @return void
-     */
+
     public function up()
     {
         $tableNames = config('permission.table_names');
@@ -117,13 +115,68 @@ class CreatePermissionTables extends Migration
         app('cache')
             ->store(config('permission.cache.store') != 'default' ? config('permission.cache.store') : null)
             ->forget(config('permission.cache.key'));
+
+            DB::transaction(function () {
+                $ROLE_ADMIN = Role::create(['name' => 'ROLE_ADMIN', 'guard_name' => 'api']);
+                $ROLE_SELLER = Role::create(['name' => 'ROLE_SELLER', 'guard_name' => 'api']);
+                $ROLE_COMPANY = Role::create(['name' => 'ROLE_COMPANY', 'guard_name' => 'api']);
+                $ROLE_CUSTOMER = Role::create(['name' => 'ROLE_CUSTOMER', 'guard_name' => 'api']);
+            
+                Permission::create(['name' => 'getAll cart', 'guard_name' => 'api'])->assignRole($ROLE_CUSTOMER);
+                Permission::create(['name' => 'create cart', 'guard_name' => 'api'])->assignRole($ROLE_CUSTOMER);
+                Permission::create(['name' => 'increase cart', 'guard_name' => 'api'])->assignRole($ROLE_CUSTOMER);
+                Permission::create(['name' => 'decrease cart', 'guard_name' => 'api'])->assignRole($ROLE_CUSTOMER);
+                Permission::create(['name' => 'delete cart', 'guard_name' => 'api'])->assignRole($ROLE_CUSTOMER);
+                Permission::create(['name' => 'getAll category', 'guard_name' => 'api'])->assignRole($ROLE_ADMIN);
+                Permission::create(['name' => 'getstore category', 'guard_name' => 'api'])->assignRole($ROLE_ADMIN);
+                Permission::create(['name' => 'get category', 'guard_name' => 'api'])->assignRole($ROLE_ADMIN);
+                Permission::create(['name' => 'create category', 'guard_name' => 'api'])->assignRole($ROLE_ADMIN);
+                Permission::create(['name' => 'update category', 'guard_name' => 'api'])->assignRole($ROLE_ADMIN);
+                Permission::create(['name' => 'delete category', 'guard_name' => 'api'])->assignRole($ROLE_ADMIN);
+                Permission::create(['name' => 'getAll comment', 'guard_name' => 'api'])->assignRole($ROLE_ADMIN);
+                Permission::create(['name' => 'get comment', 'guard_name' => 'api'])->assignRole($ROLE_ADMIN);
+                Permission::create(['name' => 'create comment', 'guard_name' => 'api'])->assignRole($ROLE_CUSTOMER);
+                Permission::create(['name' => 'update comment', 'guard_name' => 'api'])->assignRole($ROLE_CUSTOMER);
+                Permission::create(['name' => 'delete comment', 'guard_name' => 'api'])->assignRole($ROLE_CUSTOMER)->assignRole($ROLE_ADMIN);
+                Permission::create(['name' => 'getAll complaint', 'guard_name' => 'api'])->assignRole($ROLE_ADMIN);
+                Permission::create(['name' => 'get complaint', 'guard_name' => 'api'])->assignRole($ROLE_ADMIN);
+                Permission::create(['name' => 'user complaint', 'guard_name' => 'api'])->assignRole($ROLE_ADMIN);
+                Permission::create(['name' => 'create complaint', 'guard_name' => 'api'])->assignRole($ROLE_CUSTOMER)->assignRole($ROLE_COMPANY)->assignRole($ROLE_SELLER);
+                Permission::create(['name' => 'update complaint', 'guard_name' => 'api'])->assignRole($ROLE_CUSTOMER)->assignRole($ROLE_COMPANY)->assignRole($ROLE_SELLER);
+                Permission::create(['name' => 'delete complaint', 'guard_name' => 'api'])->assignRole($ROLE_ADMIN);
+                Permission::create(['name' => 'getAll invoice', 'guard_name' => 'api'])->assignRole($ROLE_ADMIN);
+                Permission::create(['name' => 'get invoice', 'guard_name' => 'api'])->assignRole($ROLE_ADMIN);
+                Permission::create(['name' => 'user invoice', 'guard_name' => 'api'])->assignRole($ROLE_ADMIN);
+                Permission::create(['name' => 'create invoice', 'guard_name' => 'api'])->assignRole($ROLE_SELLER)->assignRole($ROLE_COMPANY);
+                Permission::create(['name' => 'update invoice', 'guard_name' => 'api'])->assignRole($ROLE_SELLER)->assignRole($ROLE_COMPANY);
+                Permission::create(['name' => 'delete invoice', 'guard_name' => 'api'])->assignRole($ROLE_SELLER)->assignRole($ROLE_COMPANY);
+                Permission::create(['name' => 'getAll order', 'guard_name' => 'api'])->assignRole($ROLE_SELLER)->assignRole($ROLE_COMPANY);
+                Permission::create(['name' => 'get order', 'guard_name' => 'api'])->assignRole($ROLE_CUSTOMER);
+                Permission::create(['name' => 'create order', 'guard_name' => 'api'])->assignRole($ROLE_CUSTOMER);
+                Permission::create(['name' => 'confirm order', 'guard_name' => 'api'])->assignRole($ROLE_SELLER)->assignRole($ROLE_COMPANY);
+                Permission::create(['name' => 'time order', 'guard_name' => 'api'])->assignRole($ROLE_SELLER)->assignRole($ROLE_COMPANY);
+                Permission::create(['name' => 'update order', 'guard_name' => 'api'])->assignRole($ROLE_CUSTOMER);
+                Permission::create(['name' => 'delete order', 'guard_name' => 'api'])->assignRole($ROLE_CUSTOMER);
+                Permission::create(['name' => 'getAll product', 'guard_name' => 'api'])->assignRole($ROLE_CUSTOMER);
+                Permission::create(['name' => 'get product', 'guard_name' => 'api'])->assignRole($ROLE_CUSTOMER);
+                Permission::create(['name' => 'store product', 'guard_name' => 'api'])->assignRole($ROLE_CUSTOMER);
+                Permission::create(['name' => 'create product', 'guard_name' => 'api'])->assignRole($ROLE_SELLER);
+                Permission::create(['name' => 'update product', 'guard_name' => 'api'])->assignRole($ROLE_SELLER);
+                Permission::create(['name' => 'delete product', 'guard_name' => 'api'])->assignRole($ROLE_SELLER);
+                Permission::create(['name' => 'get rating', 'guard_name' => 'api'])->assignRole($ROLE_COMPANY)->assignRole($ROLE_SELLER);
+                Permission::create(['name' => 'user rating', 'guard_name' => 'api'])->assignRole($ROLE_COMPANY)->assignRole($ROLE_SELLER);
+                Permission::create(['name' => 'product rating', 'guard_name' => 'api'])->assignRole($ROLE_CUSTOMER);
+                Permission::create(['name' => 'create rating', 'guard_name' => 'api'])->assignRole($ROLE_CUSTOMER);
+                Permission::create(['name' => 'update rating', 'guard_name' => 'api'])->assignRole($ROLE_CUSTOMER);
+                Permission::create(['name' => 'delete rating', 'guard_name' => 'api'])->assignRole($ROLE_CUSTOMER);
+                Permission::create(['name' => 'getAll stores', 'guard_name' => 'api'])->assignRole($ROLE_CUSTOMER)->assignRole($ROLE_ADMIN);
+                Permission::create(['name' => 'get store', 'guard_name' => 'api'])->assignRole($ROLE_CUSTOMER)->assignRole($ROLE_ADMIN);
+                Permission::create(['name' => 'create store', 'guard_name' => 'api'])->assignRole($ROLE_SELLER)->assignRole($ROLE_COMPANY);
+                Permission::create(['name' => 'update store', 'guard_name' => 'api'])->assignRole($ROLE_SELLER)->assignRole($ROLE_COMPANY);
+                Permission::create(['name' => 'delete store', 'guard_name' => 'api'])->assignRole($ROLE_SELLER)->assignRole($ROLE_COMPANY);
+            });
     }
 
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
     public function down()
     {
         $tableNames = config('permission.table_names');

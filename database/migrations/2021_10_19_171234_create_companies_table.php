@@ -6,30 +6,18 @@ use Illuminate\Support\Facades\Schema;
 
 class CreateCompaniesTable extends Migration
 {
-    /**
-     * Run the migrations.
-     *
-     * @return void
-     */
     public function up()
     {
         Schema::create('companies', function (Blueprint $table) {
             $table->id();
+            $table->boolean('has_store')->default(false);
             $table->integer('customers_number')->default(0);
-            $table->integer('orders_number')->default(0);
-            $table->float('delivery_speed')->default(0);
-            $table->boolean('has_store')->default(0);
-            $table->enum('badge', ['gold', 'silver', 'bronze']);
-            $table->string('specialize')->nullable();
+            $table->float('delivery_speed')->nullable();
+            $table->enum('badge', ['bronze', 'silver','gold'])->default('bronze');
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
     public function down()
     {
         Schema::dropIfExists('companies');

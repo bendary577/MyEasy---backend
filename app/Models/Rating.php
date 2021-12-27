@@ -10,18 +10,16 @@ class Rating extends Model
     use HasFactory;
 
     protected $fillable = [
-        'rate',
-        'user_id',
-        'product_id'
+        'value',
     ];
 
     protected $casts = [
         'created_at' => 'datetime',
     ];
 
-    public function customerProfile()
+    public function customer()
     {
-        return $this->belongsTo(CustomerProfile::class);
+        return $this->belongsTo(Customer::class);
     }
 
     public function product()

@@ -4,8 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Models\Store;
-use Models\CustomerProfile;
 
 class Product extends Model
 {
@@ -13,15 +11,13 @@ class Product extends Model
 
     protected $fillable = [
         'name',
-        'store_id',
         'description',
-        'photo_path',
         'price',
         'available_number',
         'status',
-        'rating',
         'ratings_number',
-    ];
+        'ratings_value',
+    ]; 
 
     protected $casts = [
         'created_at' => 'datetime',
@@ -32,14 +28,24 @@ class Product extends Model
         return $this->belongsTo(Store::class);
     }
 
+    public function order()
+    {
+        return $this->belongsTo(Order::class);
+    }
+
+    public function invoice()
+    {
+        return $this->belongsTo(Invoice::class);
+    }
+
+    public function images()
+    {
+        return $this->hasMany(File::class);
+    }
+
     public function comment()
     {
         return $this->hasMany(Comment::class);
-    }
-
-    public function cart()
-    {
-        return $this->hasMany(Cart::class);
     }
 
     public function rating()

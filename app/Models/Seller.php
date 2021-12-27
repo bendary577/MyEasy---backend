@@ -12,9 +12,6 @@ class Seller extends Model
     protected $fillable = [
         'gender',
         'birth_date',
-        'specialization',
-        'customers_number',
-        'orders_number',
         'delivery_speed',
         'has_store',
         'badge',
@@ -25,7 +22,7 @@ class Seller extends Model
         return $this->morphOne(User::class, 'profile');
     }
 
-    public function invoice()
+    public function invoices()
     {
         return $this->hasMany(Invoice::class);
     }
@@ -35,8 +32,9 @@ class Seller extends Model
         return $this->hasOne(Store::class);
     }
 
-    public function complaint()
+    public function national_identity()
     {
-        return $this->hasMany(Complaint::class);
+        return $this->hasOne(File::class);
     }
+
 }

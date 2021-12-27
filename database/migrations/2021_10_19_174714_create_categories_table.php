@@ -6,11 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 class CreateCategoriesTable extends Migration
 {
-    /**
-     * Run the migrations.
-     *
-     * @return void
-     */
+
     public function up()
     {
         Schema::create('categories', function (Blueprint $table) {
@@ -18,13 +14,30 @@ class CreateCategoriesTable extends Migration
             $table->string('name');
             $table->timestamps();
         });
+
+        
+        DB::table('categories')->insert([
+            ['name' => 'Home exercise equipment'],
+            ['name' => 'Electronics'],
+            ['name' => 'Meal boxes and kitchen accessories'],
+            ['name' => 'Gaming'],
+            ['name' => 'Creative home entertainment'],
+            ['name' => 'Furniture'],
+            ['name' => 'Groceries'],
+            ['name' => 'Arts, Crafts'],
+            ['name' => 'Pet supplies'],
+            ['name' => 'Books'],
+            ['name' => 'Clothing'],
+            ['name' => 'Beauty & Personal Care'],
+            ['name' => 'Garden & Outdoor'],
+            ['name' => 'Exercise/Fitness'],
+            ['name' => 'Cars'],
+            ['name' => 'Sporting goods'],
+            ['name' => 'Watches'],
+            ['name' => 'Other'],
+        ]);
     }
 
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
     public function down()
     {
         Schema::dropIfExists('categories');

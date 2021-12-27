@@ -9,10 +9,10 @@ class Admin extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'name'
-    ];
+    protected $fillable = [];
 
+    protected $guarded = [];
+    
     public function user()
     {
         return $this->morphOne(User::class, 'profile');

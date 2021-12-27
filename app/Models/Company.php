@@ -10,12 +10,10 @@ class Company extends Model
     use HasFactory;
 
     protected $fillable = [
+        'has_store',
         'customers_number',
-        'orders_number',
         'badge',
         'delivery_speed',
-        'has_store',
-        'specilize',
     ];
 
     public function user()
@@ -23,7 +21,7 @@ class Company extends Model
         return $this->morphOne(User::class, 'profile');
     }
 
-    public function invoice()
+    public function invoices()
     {
         return $this->hasMany(Invoice::class);
     }
@@ -33,8 +31,9 @@ class Company extends Model
         return $this->hasOne(Store::class);
     }
 
-    public function complaint()
+    public function activation_documents()
     {
-        return $this->hasMany(Complaint::class);
+        return $this->hasMany(File::class);
     }
+
 }

@@ -11,14 +11,13 @@ class Category extends Model
 
     protected $fillable = [
         'name',
-        'category_id'
     ];
 
     protected $casts = [
         'created_at' => 'datetime',
     ];
 
-    public function store()
+    public function stores()
     {
         return $this->hasMany(Store::class);
     }

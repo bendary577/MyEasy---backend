@@ -11,18 +11,15 @@ class Complaint extends Model
 
     protected $fillable = [
         'content',
-        'user_id'
+        'status',
+        'has_reply',
     ];
 
-    public function sellerProfile(){
-        return $this->belongsTo(SellerProfile::class);
+    public function user(){
+        return $this->belongsTo(User::class);
     }
 
-    public function companyProfile(){
-        return $this->belongsTo(CompanyProfile::class);
-    }
-
-    public function customerProfile(){
-        return $this->belongsTo(CustomerProfile::class);
+    public function attachments(){
+        return $this->hasMany(File::class);
     }
 }

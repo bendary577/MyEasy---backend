@@ -14,20 +14,19 @@ class User extends Authenticatable
     use HasRoles, HasApiTokens, HasFactory, Notifiable;
 
     protected $fillable = [
-        'first_name',
-        'second_name',
+        'name',
+        'username',
         'email',
         'password',
-        'phone_number',
+        'phone',
         'address',
         'zipcode',
-        'avatar',
-        'photo_path',
         'bio',
-        'type',
-        'is_blocked',
+        'blocked',
         'account_activated',
+        'account_activated_at',
         'activation_token',
+        'available_money_amnt',
     ];
 
     protected $hidden = [
@@ -36,12 +35,38 @@ class User extends Authenticatable
     ];
 
     protected $casts = [
-        'email_verified_at' => 'datetime',
+        'account_activated_at' => 'datetime',
     ];
 
-    /*********** Profile ***********/
+    protected $with = ['profile'];
+
     public function profile()
     {
         return $this->morphTo();
+    }
+
+    public function getHasAdminProfileAttribute()
+    {
+      return $this->profile_type == 'App\Models\Admin';
+    }
+
+    public function getHasCustomerProfileAttribute()
+    {
+      return $this->profile_type == 'App\Models\Customer';
+    }
+
+    public function getHasSellerProfileAttribute()
+    {
+      return $this->profile_type == 'App\Models\Seller';
+    }
+    
+    public function getHasCompanyProfileAttribute()
+    {
+      return $this->profile_type == 'App\Models\Company';
+    }
+
+    public function complaints()
+    {
+        return $this->hasMany(Complaint::class);
     }
 }

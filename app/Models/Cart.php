@@ -9,22 +9,11 @@ class Cart extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'quantity',
-        'price',
-        'total',
-        'state',
-        'user_id',
-        'product_id'
-    ];
+    protected $fillable = [];
 
-    public function customerProfile()
+    public function customer()
     {
-        return $this->belongsTo(CustomerProfile::class);
+        return $this->belongsTo(Customer::class);
     }
 
-    public function product()
-    {
-        return $this->belongsTo(Product::class);
-    }
 }

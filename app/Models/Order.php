@@ -10,19 +10,29 @@ class Order extends Model
     use HasFactory;
 
     protected $fillable = [
-        'total',
-        'products',
+        'total_price',
         'status',
-        'user_id'
+        'customer_confirm',
+        'seller_confirm'
     ];
 
     protected $casts = [
         'created_at' => 'datetime',
     ];
 
-    public function customerProfile()
+    public function customer()
     {
-        return $this->belongsTo(CustomerProfile::class);
+        return $this->belongsTo(Customer::class);
+    }
+
+    public function store()
+    {
+        return $this->belongsTo(Store::class);
+    }
+
+    public function product()
+    {
+        return $this->hasOne(Product::class);
     }
 
 }
