@@ -24,17 +24,17 @@ class Seller extends Model
 
     public function invoices()
     {
-        return $this->hasMany(Invoice::class);
+        return $this->hasMany(SellerInvoice::class);
     }
 
     public function store()
     {
-        return $this->hasOne(Store::class);
+        return $this->hasOne(SellerStore::class);
     }
 
-    public function national_identity()
+    public function nationalIdentity()
     {
-        return $this->hasOne(File::class);
+        return $this->hasOne(NationalIdentity::class);
     }
 
 }

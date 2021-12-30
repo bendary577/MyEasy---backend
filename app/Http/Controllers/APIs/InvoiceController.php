@@ -20,78 +20,65 @@ class InvoiceController extends Controller
     */
 
     /* -------------------------------------------get all Invoices ------------------------------------------------ */
-    public function getAll()
+    public function index()
     {
         if (!Auth::user()->can('getAll invoice')) {
-            return response(['message'=> 'Permission Denied'], 401);
+            return response()->json(['message'=> 'Permission Denied'], 401);
         }
-
-        $invoice = Invoice::paginate(10);
-        return response([
-            'message'   => 'Get All Invoices',
-            'data'      => $invoice
+        $invoices = Invoice::where('user_id', Auth::user()->id)->paginate(10);
+        return response()->json([
+            'message'   => 'invoices returned successfully',
+            'data'      => $invoices
         ], 200);
     }
 
-    /* ------------------------------------- get invoice by user ------------------------------------ */
-    public function get_invoice_user()
+    /* -------------------------------------get one Invoice -------------------------------------- */
+    public function get($id)
     {
-        if (!Auth::user()->can('user invoice')) {
-            return response(['Permission Denied']);
+        if (!Auth::user()->can('get invoice')) {
+            return response()->json(['message'=>'Permission Denied'], 401);
         }
-
-        $invoice = Invoice::where('user_id', Auth::user()->id)->paginate(10);
-        return response([
-            'message'   => 'Your Invoice Returned',
-            'data'      => $invoice
-        ], 200);
+        if (Invoice::where('id', $id)->exists()) {
+            $invoice = Invoice::where('id', $id)->get();
+            return response()->json([
+                'message'   => "one invoice returned",
+                'data'      => $invoice
+            ], 200);
+        } else {
+            return response()->json(["message" => "Invoice not found"], 404);
+        }
     }
 
     /* ------------------------------------- create an Invoice -------------------------------------- */
     public function create(Request $request)
     {
         if (!Auth::user()->can('create invoice')) {
-            return response(['Permission Denied']);
+            return response()->json(['message'=>'Permission Denied'], 401);
         }
-
-        $data = $request->all();
-        //validator or request validator
-        $validator = Validator::make($data, [
+        $validator = Validator::make($request->all(), [
             'title' => 'required|max:255',
             'price' => 'required|integer'
         ]);
-
         if ($validator->fails()) {
             return response(['message' => $validator->errors()], 'Validation Error');
         }
-
-        $invoice = Invoice::create([
-            'user_id'   => Auth::user()->id,
-            'title'     => $data['title'],
-            'price'     => $data['price'],
-            'expiration' => $data['expiration']
-        ]);
-
-        return response(["message" => "invoice record created"], 201);
-    }
-
-
-    /* -------------------------------------get one Invoice -------------------------------------- */
-    public function getOne($id)
-    {
-        if (!Auth::user()->can('get invoice')) {
-            return response(['Permission Denied']);
+        $invoice = new Invoice();
+        $invoice->title = $request['title'];
+        $invoice->code = $invoice->generateCode();
+        $invoice->url = $request['url'];
+        $invoice->customer_name = $request['customer_name'];
+        $invoice->currency = $request['currency'];
+        $invoice->expiration_date = $request['expiration_date'];
+        $invoice->total_price = 0;
+        $invoice->save();
+        for($i = 0; $i < $request['number_of_items']; $i++){
+            $product = new Product();
+            $product->name = $request[$i+'_item_name'];
+            $product->available_number = $request[$i+'_item_available_number'];
+            $product->save();
         }
-
-        if (Invoice::where('id', $id)->exists()) {
-            $invoice = Invoice::where('id', $id)->get();
-            return response([
-                'message'   => "one invoice returned",
-                'data'      => $invoice
-            ], 200);
-        } else {
-            return response(["message" => "Invoice not found"], 404);
-        }
+        $owner_profile = Auth::user()->profile();
+        return response()->json(["message" => "invoice created successfully"], 201);
     }
 
     /* -------------------------------------update one Invoice -------------------------------------- */
@@ -116,15 +103,14 @@ class InvoiceController extends Controller
     public function delete($id)
     {
         if (!Auth::user()->can('delete invoice')) {
-            return response(['Permission Denied']);
+            return response()->json(['message'=>'Permission Denied'], 401);
         }
-
         if (Invoice::where('id', $id)->exists()) {
             $invoice = Invoice::find($id);
             $invoice->delete();
-            return response(["message" => "Invoice record deleted"], 202);
+            return response()->json(["message" => "Invoice deleted successfully"], 202);
         } else {
-            return response(["message" => "Invoice not found"], 404);
+            return response()->json(["message" => "Invoice not found"], 404);
         }
     }
 }

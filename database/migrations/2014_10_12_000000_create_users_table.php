@@ -25,6 +25,7 @@ class CreateUsersTable extends Migration
             $table->boolean('blocked')->default(false);
             $table->boolean('account_activated')->default(false);
             $table->date('account_activated_at')->nullable();
+            $table->string('forgot_password_code')->nullable();
             $table->softDeletes();
             $table->rememberToken();
             $table->timestamps();

@@ -9,8 +9,11 @@ class Invoice extends Model
 {
     use HasFactory;
 
+    protected $with = ['invoice'];
+
     protected $fillable = [
         'code',
+        'url',
         'customer_name',
         'total_price',
         'paid',
@@ -18,25 +21,26 @@ class Invoice extends Model
         'owner_type',
         'currency',
         'expiration_date',
+        'number_of_items',
     ];
 
     protected $casts = [
         'created_at' => 'datetime',
     ];
 
-    public function seller()
+    public function invoice()
     {
-        return $this->belongsTo(Seller::class);
+      return $this->morphTo();
     }
 
-    public function company()
+    public function invoiceItems()
     {
-        return $this->belongsTo(Company::class);
+        return $this->hasMany(InvoiceItem::class);
     }
 
-    public function products()
+    public function generateCode()
     {
-        return $this->hasMany(Product::class);
+        return rand(pow(10, 8-1), pow(10, 8)-1);
     }
 
 }

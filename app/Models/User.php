@@ -27,6 +27,7 @@ class User extends Authenticatable
         'account_activated_at',
         'activation_token',
         'available_money_amnt',
+        'forgot_password_code',
     ];
 
     protected $hidden = [
@@ -68,5 +69,10 @@ class User extends Authenticatable
     public function complaints()
     {
         return $this->hasMany(Complaint::class);
+    }
+
+    public function avatar()
+    {
+        return $this->hasOne(Avatar::class);
     }
 }

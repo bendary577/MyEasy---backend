@@ -45,13 +45,12 @@ Route::middleware('auth:api')->group(function () {
     });
 
     // Invoice Routes
-    Route::group(['prefix' => 'invoice'], function () {
-        Route::get('/', 'InvoiceController@getAll');
-        Route::get('/user', 'InvoiceController@get_invoice_user');
-        Route::get('/{id}', 'InvoiceController@getOne');
+    Route::group(['prefix' => 'invoices'], function () {
+        Route::get('/', 'InvoiceController@index');
+        Route::get('/{id}', 'InvoiceController@get');
         Route::post('/', 'InvoiceController@create');
         Route::post('/{id}', 'InvoiceController@update');
-        Route::post('/delete/{id}', 'InvoiceController@delete');
+        Route::get('/{id}', 'InvoiceController@delete');
     });
 
     // Cart Routes

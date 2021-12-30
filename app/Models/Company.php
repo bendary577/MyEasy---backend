@@ -11,7 +11,6 @@ class Company extends Model
 
     protected $fillable = [
         'has_store',
-        'customers_number',
         'badge',
         'delivery_speed',
     ];
@@ -23,17 +22,22 @@ class Company extends Model
 
     public function invoices()
     {
-        return $this->hasMany(Invoice::class);
+        return $this->hasMany(CompanyInvoice::class);
     }
 
     public function store()
     {
-        return $this->hasOne(Store::class);
+        return $this->hasOne(CompanyStore::class);
     }
 
-    public function activation_documents()
+    public function taxCard()
     {
-        return $this->hasMany(File::class);
+        return $this->hasOne(TaxCard::class);
+    }
+
+    public function commercialRecord()
+    {
+        return $this->hasOne(CommercialRecord::class);
     }
 
 }

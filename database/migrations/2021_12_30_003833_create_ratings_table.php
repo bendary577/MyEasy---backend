@@ -12,10 +12,10 @@ class CreateRatingsTable extends Migration
         Schema::create('ratings', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('customer_id')->nullable();
-            $table->unsignedBigInteger('product_id')->nullable();
+            $table->unsignedBigInteger('store_product_id')->nullable();
             $table->enum('value', [1,2,3,4,5]);
             $table->foreign('customer_id')->references('id')->on('customers')->onDelete('cascade');
-            $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade');
+            $table->foreign('store_product_id')->references('id')->on('store_products')->onDelete('cascade');
             $table->timestamps();
         });
     }

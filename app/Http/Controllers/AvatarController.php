@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\File;
+use App\Models\Avatar;
 use Illuminate\Http\Request;
 
-class FileController extends Controller
+class AvatarController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -41,10 +41,10 @@ class FileController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\File  $file
+     * @param  \App\Models\Avatar  $avatar
      * @return \Illuminate\Http\Response
      */
-    public function show(File $file)
+    public function show(Avatar $avatar)
     {
         //
     }
@@ -52,10 +52,10 @@ class FileController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\File  $file
+     * @param  \App\Models\Avatar  $avatar
      * @return \Illuminate\Http\Response
      */
-    public function edit(File $file)
+    public function edit(Avatar $avatar)
     {
         //
     }
@@ -64,10 +64,10 @@ class FileController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\File  $file
+     * @param  \App\Models\Avatar  $avatar
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, File $file)
+    public function update(Request $request, Avatar $avatar)
     {
         //
     }
@@ -75,10 +75,10 @@ class FileController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\File  $file
+     * @param  \App\Models\Avatar  $avatar
      * @return \Illuminate\Http\Response
      */
-    public function destroy(File $file)
+    public function destroy(Avatar $avatar)
     {
         //
     }

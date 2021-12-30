@@ -9,9 +9,10 @@ class Store extends Model
 {
     use HasFactory;
 
+    protected $with = ['store'];
+
     protected $fillable = [
         'title',
-        'owner_type',
         'customers_number',
         'orders_number',
     ];
@@ -20,24 +21,19 @@ class Store extends Model
         'created_at' => 'datetime',
     ];
 
-    public function products()
+    public function store()
     {
-        return $this->hasMany(Product::class);
+      return $this->morphTo();
+    }
+
+    public function storeProducts()
+    {
+        return $this->hasMany(StoreProduct::class);
     }
 
     public function orders()
     {
         return $this->hasMany(Order::class);
-    }
-
-    public function seller()
-    {
-        return $this->belongsTo(Seller::class);
-    }
-
-    public function company()
-    {
-        return $this->belongsTo(Company::class);
     }
 
     public function category()
@@ -47,7 +43,7 @@ class Store extends Model
 
     public function logo()
     {
-        return $this->hasOne(File::class);
+        return $this->hasOne(Logo::class);
     }
 
     public function searchableAs()

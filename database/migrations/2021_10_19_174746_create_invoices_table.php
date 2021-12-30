@@ -10,8 +10,6 @@ class CreateInvoicesTable extends Migration
     {
         Schema::create('invoices', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('company_id')->nullable();
-            $table->unsignedBigInteger('seller_id')->nullable();
             $table->string('code');
             $table->string('customer_name');
             $table->float('total_price');
@@ -20,8 +18,9 @@ class CreateInvoicesTable extends Migration
             $table->enum('currency', ['EGP', 'USD']);
             $table->date('paid_at');
             $table->date('expiration_date');
-            $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
-            $table->foreign('seller_id')->references('id')->on('sellers')->onDelete('cascade');
+            $table->integer('number_of_items');
+            $table->string('invocie_type')->nullable();
+            $table->unsignedInteger('invoice_id')->nullable();
             $table->timestamps();
         });
     }

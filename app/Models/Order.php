@@ -30,9 +30,9 @@ class Order extends Model
         return $this->belongsTo(Store::class);
     }
 
-    public function product()
+    public function orderProduct()
     {
-        return $this->hasOne(Product::class);
+        return $this->hasOne(OrderProduct::class);
     }
 
 }
