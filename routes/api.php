@@ -5,15 +5,22 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-
 Route::group(['middleware' => ['cors', 'json.response']], function () {
     Route::post('/register', 'AuthController@register');
     Route::post('/login', 'AuthController@login');
+    Route::post('/{id}/activate-user', 'AuthController@activateUser');
+    Route::post('/send-code', 'AuthController@forgotPasswordSendCode');
+    Route::post('/check-code', 'AuthController@activateForgotPasswordCode');
+    Route::post('/reset-password', 'AuthController@submitResetPassword');
 });
 
 Route::middleware('auth:api')->group(function () {
-    // Logout
-    Route::post('/logout', 'AuthController@logout');
+    //User Routes
+    Route::group(['prefix' => 'user'], function () {
+        Route::get('/{id}', 'UserController@get');
+        Route::post('/{id}', 'UserController@update');
+        Route::post('/logout', 'UserController@logout');
+    });
 
     // Category Routes
     Route::group(['prefix' => 'categories'], function () {

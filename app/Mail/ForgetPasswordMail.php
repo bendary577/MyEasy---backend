@@ -21,7 +21,7 @@ class ForgetPasswordMail extends Mailable
     {
         $address = 'mbendary577@gmail.com';
         $subject = 'Reset Password Email';
-        $name = 'Mohamed Bendary';
+        $name = 'My Easy';
 
         return $this->view('emails.forgetPasswordMail')
                     ->from($address, $name)

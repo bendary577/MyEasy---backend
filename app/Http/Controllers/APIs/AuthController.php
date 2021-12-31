@@ -22,6 +22,19 @@ class AuthController extends Controller
     //---------------------------------------------------- Register -----------------------------------------------------------
     public function register(Register $request)
     {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|max:255',
+            'username' => 'required|max:255',
+            'email' => 'required',
+            'phone' => 'required|integer',
+            'address' => 'required|in:new,used',
+            'zipcode' => 'required|in:new,used',
+            'gender' => 'required|in:new,used',
+            'birth_date' => 'required|in:new,used',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['message' => $validator->errors()], 400);
+        }
         $request['remember_token'] = Str::random(10);
         $user = new User;
         $user->name = $request['name'];
@@ -30,7 +43,6 @@ class AuthController extends Controller
         $user->password =  Hash::make($request['password']);
         $user->phone = $request['phone'];
         $user->address = $request['address'];
-        $user->bio = $request['bio'];
         $user->zipcode = $request['zipcode'];
         $user->activation_token = Str::random(60);
         $user->save();
@@ -74,13 +86,13 @@ class AuthController extends Controller
             $user->assignRole($role);
             $user->givePermissionTo($role->permissions);
         }else{
-            return response()->json(['message' => 'please determine the type of user'], 404);
+            return response()->json(['message' => trans('auth.determine.user.type')], 404);
         }
         $token = $user->createToken('Laravel Password Grant Client')->accessToken;
         return response()->json([
-            'message'=>'you have created account successfully', 
-            'token'=>$token, 
-            'role'=>$user->roles[0]->name],
+            'message'=> trans('auth.account.created.successfully'), 
+            'token' => $token, 
+            'role' => $user->roles[0]->name],
              201);
     }
 
@@ -92,24 +104,22 @@ class AuthController extends Controller
             if (Hash::check($request->password, $user->password)) {
                 $token = $user->createToken('Laravel Password Grant Client')->accessToken;
                 return response()->json([
-                    'message' => 'logged in successfully',
+                    'message' => trans('auth.logged.in.successfully'),
                     'token' => $token, 
                     'role' => $user->roles[0]->name], 
                     200);
             } else {
-                return response()->json(['message' => 'Password mismatch'], 422);
+                return response()->json(['message' => trans('auth.password.mismatch')], 422);
             }
         } else {
-            return response()->json(['message' => 'User does not exist'], 422);
+            return response()->json(['message' => trans('auth.user.doesnt.exist')], 422);
         }
     }
 
     //----------------------------------------------------- Logout -----------------------------------------------------------
-    public function logout(Request $request)
-    {
-        $token = $request->user()->token();
-        $token->revoke();
-        return response()->json(['message' => 'You have been successfully logged out!'], 200);
+    public function activateUser(Request $request, $id)
+    {   
+
     }
 
     //----------------------------------------------------- Logout -----------------------------------------------------------
@@ -129,9 +139,9 @@ class AuthController extends Controller
             $user->save();
             $data = ['content' => `Reset Password Code is `.$user->forgot_password_code ];
             Mail::to($user->email)->send(new ForgetPasswordMail($data, $user->email));
-            return response()->json(['message' => trans('lang.forgotPassword.sent_successfully')], 200); 
+            return response()->json(['message' => trans('auth.forgot.password.code.sent')], 200); 
         }else{
-            return response()->json(['message' => trans('lang.forgotPassword.no_user')], 401);  
+            return response()->json(['message' => trans('auth.user.doesnt.exist')], 401);  
         }
     }
 
@@ -148,12 +158,12 @@ class AuthController extends Controller
         $email = Session::get('email');
         $user = User::where('email', $email)->first();
         if(!$user){
-            return response()->json(['message' => trans('lang.forgotPassword.no_user')], 401);  
+            return response()->json(['message' => trans('auth.user.doesnt.exist')], 401);  
         }
         if($request['code'] == $user->forgot_password_code){
-            return response()->json(['message' => trans('lang.forgotPassword.no_user')], 200);
+            return response()->json(['message' => trans('auth.forgot.password.code.correct')], 200);
         }else{
-            return response()->json(['message' => trans('lang.forgotPassword.no_user')], 401);
+            return response()->json(['message' => trans('auth.forgot.password.code.mismatch')], 401);
         }
     }
 
@@ -170,14 +180,14 @@ class AuthController extends Controller
         }
         $user = User::where('email', Session::get('email'))->first();
         if(!$user){
-            return response()->json(['message' => trans('lang.forgotPassword.no_user')], 401);   
+            return response()->json(['message' => trans('auth.user.doesnt.exist')], 401);   
         }
         if($request['new_password'] != $request['confirm_password']){
-            return response()->json(['message' => trans('lang.forgotPassword.incorrect_code')], 400);  
+            return response()->json(['message' => trans('auth.reset.password.mismatch')], 400);  
         }
         $user->forgot_password_code = null;
         $user->password = $request['new_password'];
         $user->save();
-        return response()->json(['message' => trans('lang.forgotPassword.reset_password_success')], 400);
+        return response()->json(['message' => trans('auth.reset.password.successfully')], 400);
     }
 }
