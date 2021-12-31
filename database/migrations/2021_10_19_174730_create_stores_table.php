@@ -13,6 +13,7 @@ class CreateStoresTable extends Migration
             $table->id();
             $table->unsignedBigInteger('category_id')->nullable();
             $table->string('title');
+            $table->integer('code');
             $table->integer('orders_number')->default(0);
             $table->integer('customers_number')->default(0);
             $table->string('store_type')->nullable();

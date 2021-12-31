@@ -75,4 +75,8 @@ class User extends Authenticatable
     {
         return $this->hasOne(Avatar::class);
     }
+    
+    public function generateForgotPasswordCode(){
+      return rand(pow(10, 8-1), pow(10, 8)-1);
+  }
 }

@@ -13,7 +13,7 @@ class Order extends Model
         'total_price',
         'status',
         'customer_confirm',
-        'seller_confirm'
+        'store_confirm'
     ];
 
     protected $casts = [

@@ -6,132 +6,167 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Models\Product;
+use App\Models\StoreProduct;
+use App\Models\File;
+use App\Models\ProductImage;
 use Illuminate\Support\Facades\Validator;
 
 class ProductController extends Controller
 {
     /*
         getAll products
-        store product
-        create product
         getOne product
+        create product
         update product
         delete product
     */
-    /* -------------------------------------------get all products ------------------------------------------------ */
-    public function getAll()
+    /* -------------------------------------------get all store products ------------------------------------------------ */
+    public function index($store_id)
     {
         if (!Auth::user()->can('getAll product')) {
-            return response(['Permission Denied']);
+            return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
-
-        $products = Product::paginate(10);
-        return response([
-            'message'   => 'Return All Products',
-            'data'      => $products
+        $products = Redis::get('products');
+        if(isset($products)) {
+            $products = json_decode($products, FALSE);
+        }else{
+            $store = Store::where('id', $store_id)->with('storeProducts')->first();
+            $products = $store->storeProducts;
+            Redis::set('products', $products);
+        }
+        return response()->json([
+            'message' => trans('product.products.returned.successfully'),
+            'data' => $products,
         ], 200);
     }
 
-    /* ------------------------------------- get products by store -------------------------------------- */
-    public function get_product_store($id)
+    /* -------------------------------------get store product details -------------------------------------- */
+    public function get($id)
     {
-        if (!Auth::user()->can('store product')) {
-            return response(['Permission Denied']);
+        if (!Auth::user()->can('get product')) {
+            return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
-
-        $products = Product::where('store_id', $id)->paginate(10);
-        if ($products) {
-            return response([
-                'message'   => 'Return Products By Store',
-                'data'      => $products
+        if (Product::where('id', $id)->exists()) {
+            $product = Redis::get('product');
+            if(isset($product)) {
+                $product = json_decode($product, FALSE);
+            }else{
+                $product = StoreProduct::where('id', $id)->with('images', 'comments', 'ratings')->get();
+                Redis::set('product', $product);
+            }
+            return response()->json([
+                'message' => trans('product.product.returned.successfully'),
+                'data' => $product,
             ], 200);
         } else {
-            return response(['message' => 'No Products In This Store'], 404);
+            return response()->json(["message" =>  trans('product.not.found')], 404);
         }
     }
 
-    /* ------------------------------------- create a product -------------------------------------- */
+    /* ------------------------------------- create a store product -------------------------------------- */
     public function create(Request $request)
     {
         if (!Auth::user()->can('create product')) {
-            return response(['Permission Denied']);
+            return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
-
-        $data = $request->all();
-        //validator or request validator
-        $validator = Validator::make($data, [
+        $validator = Validator::make($request->all(), [
             'name' => 'required|max:255',
             'description' => 'required|max:255',
-            'price' => 'required'
+            'price' => 'required',
+            'available_number' => 'required|integer',
+            'status' => 'required|in:new,used',
         ]);
-
         if ($validator->fails()) {
-            return response(['message' => $validator->errors()], 'Validation Error');
+            return response()->json(['message' => $validator->errors()], 400);
         }
         $product = new Product;
-        $product->name              = $data['name'];
-        $product->store_id          = $data['store_id'];
-        $product->description       = $data['description'];
-        $product->photo_path        = $data['photo_path'];
-        $product->price             = $data['price'];
-        $product->available_number  = $data['available_number'];
-        $product->status            = $data['status'];
+        $product->name = $request['name'];
+        $product->price = $request['price'];
         $product->save();
-
-        return response(['message' => 'Product Record Created'], 201);
-        Product::create([
-            'name'              => $data['name'],
-            'store_id'          => $data['store_id'],
-            'description'       => $data['description'],
-            'photo_path'        => $data['photo_path'],
-            'price'             => $data['price'],
-            'available_number'  => $data['available_number'],
-            'status'            => $data['status']
-        ]);
-
-        return 0;
-        return response(['message' => 'Product Record Created'], 201);
-    }
-
-    /* -------------------------------------get one product -------------------------------------- */
-    public function getOne($id)
-    {
-        if (!Auth::user()->can('get product')) {
-            return response(['Permission Denied']);
+        $store_product = new StoreProduct();
+        $store_product->code = $store_product->generateCode();
+        $store_product->description = $request['description'];
+        $store_product->available_number  = $request['available_number'];
+        $store_product->status = $request['status'];
+        $store_product->product()->save($product);
+        if($request->hasfile('product_images')){
+            foreach($request->file('product_images') as $product_image_file){
+                $product_image_file_name = $product_image_file->getClientOriginalName();
+                $product_image_size = $product_image_file->getClientSize();
+                $product_image_extention = $product_image_file->extension();
+                $product_image_path = '/stores/'.$store->code.'/products/'.$store_product->code.'/images/';
+                //make new file
+                $file = new File();
+                $file->name = $product_image_file_name;
+                $file->path = $product_image_path;
+                $file->extention = $product_image_extention;
+                $file->size = $product_image_size;
+                $file->save();
+                $product_image = new ProductImage();
+                $product_image->file()->save($file);
+                $product_image->storeProduct()->associate($store_product)->save();
+                $product_image_file->move(public_path().$product_image_path, $product_image_file_name);
+            }
         }
-
-        if (Product::where('id', $id)->exists()) {
-            $product = Product::where('id', $id)->first();
-            return response([
-                'message'   => 'Return One Product',
-                'data'      => $product
-            ], 200);
-        } else {
-            return response(["message" => "Product not found"], 404);
-        }
+        return response(['message' => trans('product.created.successfully')], 201);
     }
 
     /* -------------------------------------update one product -------------------------------------- */
     public function update(Request $request, $id)
     {
         if (!Auth::user()->can('update product')) {
-            return response(['Permission Denied']);
+            return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
-
+        $validator = Validator::make($request->all(), [
+            'name' => 'min:8|max:255',
+            'price' => 'float',
+            'description' => 'max:255',
+            'available_number' => 'integer',
+            'status' => 'in:new,used',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['message' => $validator->errors()], 400);
+        }
         if (Product::where('id', $id)->exists()) {
             $product = Product::find($id);
-            $product->name = is_null($request->name) ? $product->name : $request->name;
-            $product->description = is_null($request->description) ? $product->description : $request->description;
-            $product->description = is_null($request->description) ? $product->description : $request->description;
-            $product->photo_path = is_null($request->photo_path) ? $product->photo_path : $request->photo_path;
-            $product->available_number = is_null($request->available_number) ? $product->available_number : $request->available_number;
-            $product->price = is_null($request->price) ? $product->price : $request->price;
-            $product->status = is_null($request->status) ? $product->status : $request->status;
+            if($request['name']){
+                $product->name = $request['name'];
+            }
+            if($request['price']){
+                $product->price = $request['price'];
+            }
+            if($request['description']){
+                $product->product->description = $request['description'];
+            }
+            if($request['available_number']){
+                $product->product->available_number = $request['available_number'];
+            }
+            if($request['status']){
+                $product->product->status = $request['status'];
+            }
+            if($request->hasfile('product_images')){
+                foreach($request->file('product_images') as $product_image_file){
+                    $product_image_file_name = $product_image_file->getClientOriginalName();
+                    $product_image_size = $product_image_file->getClientSize();
+                    $product_image_extention = $product_image_file->extension();
+                    $product_image_path = '/stores/'.$store->code.'/products/'.$store_product->code.'/images/';
+                    //make new file
+                    $file = new File();
+                    $file->name = $product_image_file_name;
+                    $file->path = $product_image_path;
+                    $file->extention = $product_image_extention;
+                    $file->size = $product_image_size;
+                    $file->save();
+                    $product_image = new ProductImage();
+                    $product_image->file()->save($file);
+                    $product_image->storeProduct()->associate($store_product)->save();
+                    $product_image_file->move(public_path().$product_image_path, $product_image_file_name);
+                }
+            }
             $product->save();
-
-            return response(["message" => "Product updated successfully"], 200);
+            return response(["message" => trans('product.updated.successfully')], 200);
         } else {
-            return response(["message" => "Product not found"], 404);
+            return response(["message" => trans('product.not.found')], 404);
         }
     }
 
@@ -139,15 +174,14 @@ class ProductController extends Controller
     public function delete($id)
     {
         if (!Auth::user()->can('delete product')) {
-            return response(['Permission Denied']);
+            return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
-
         if (Product::where('id', $id)->exists()) {
             $product = Product::find($id);
             $product->delete();
-            return response()->json(["message" => "Product record deleted"], 202);
+            return response()->json(["message" => trans('product.deleted.successfully')], 202);
         } else {
-            return response()->json(["message" => "Product not found"], 404);
+            return response()->json(["message" => trans('product.not.found')], 404);
         }
     }
 }

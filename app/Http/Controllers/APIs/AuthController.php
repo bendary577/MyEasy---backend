@@ -19,8 +19,7 @@ use App\Http\Requests\Auth\Login;
 
 class AuthController extends Controller
 {
-
-    //----------------------------------------------------- Register -----------------------------------------------------------
+    //---------------------------------------------------- Register -----------------------------------------------------------
     public function register(Register $request)
     {
         $request['remember_token'] = Str::random(10);
@@ -39,7 +38,7 @@ class AuthController extends Controller
             $profile = new Admin();
             $profile->name = 'Admin';
             $profile->user()->save($user);
-            $role = Role::where(['name' => 'ROLE_ADMIN'])->first();
+            $role = Role::findByName('ROLE_ADMIN');
             $user->assignRole($role);
             $user->givePermissionTo($role->permissions);
         }else if($request['type'] == 1){
@@ -48,9 +47,12 @@ class AuthController extends Controller
             $profile->orders_number = 0;
             $profile->birth_date = $request['birth_date'];
             $profile->user()->save($user);
-            $role = Role::where(['name' => 'ROLE_CUSTOMER'])->first();
+            $role = Role::findByName('ROLE_CUSTOMER');
             $user->assignRole($role);
             $user->givePermissionTo($role->permissions);
+            //instantiate user cart 
+            $cart = new Cart();
+            $profile->cart()->save($cart);
         }else if($request['type'] == 2){
             $profile = new Seller();
             $profile->gender = $request['gender'];
@@ -59,7 +61,7 @@ class AuthController extends Controller
             $profile->has_store = false;
             $profile->delivery_speed = 0;
             $profile->user()->save($user);
-            $role = Role::where(['name' => 'ROLE_SELLER'])->first();
+            $role = Role::findByName('ROLE_SELLER');
             $user->assignRole($role);
             $user->givePermissionTo($role->permissions);
         }else if($request['type'] == 3){
@@ -68,7 +70,7 @@ class AuthController extends Controller
             $profile->badge = 'bronze';
             $profile->delivery_speed = 0;
             $profile->user()->save($user);
-            $role = Role::where(['name' => 'ROLE_COMPANY'])->first();
+            $role = Role::findByName('ROLE_COMPANY');
             $user->assignRole($role);
             $user->givePermissionTo($role->permissions);
         }else{
@@ -108,5 +110,74 @@ class AuthController extends Controller
         $token = $request->user()->token();
         $token->revoke();
         return response()->json(['message' => 'You have been successfully logged out!'], 200);
+    }
+
+    //----------------------------------------------------- Logout -----------------------------------------------------------
+    public function forgotPasswordSendCode(Request $request)
+    {
+        $validator = Validator::make($request->all(),
+        [
+            'email' => 'required|email:rfc',
+        ]);
+        if ($validator->fails()){
+            return response()->json(['message' => $validator->errors()], 400);   
+        }
+        if(User::where('email', '=', $request['email'])->exists()){
+            Session::put('email', $request['email']);
+            $user = User::where('email', '=', $request['email'])->first();
+            $user->forgot_password_code = $user->generateForgotPasswordCode();
+            $user->save();
+            $data = ['content' => `Reset Password Code is `.$user->forgot_password_code ];
+            Mail::to($user->email)->send(new ForgetPasswordMail($data, $user->email));
+            return response()->json(['message' => trans('lang.forgotPassword.sent_successfully')], 200); 
+        }else{
+            return response()->json(['message' => trans('lang.forgotPassword.no_user')], 401);  
+        }
+    }
+
+    //----------------------------------------------------- Logout -----------------------------------------------------------
+    public function activateForgotPasswordCode(Request $request)
+    {
+        $validator = Validator::make($request->all(),
+        [
+            'code' => 'required'
+        ]);
+        if ($validator->fails()){
+            return response()->json(['message' => $validator->errors()], 400);    
+        }
+        $email = Session::get('email');
+        $user = User::where('email', $email)->first();
+        if(!$user){
+            return response()->json(['message' => trans('lang.forgotPassword.no_user')], 401);  
+        }
+        if($request['code'] == $user->forgot_password_code){
+            return response()->json(['message' => trans('lang.forgotPassword.no_user')], 200);
+        }else{
+            return response()->json(['message' => trans('lang.forgotPassword.no_user')], 401);
+        }
+    }
+
+    //----------------------------------------------------- Logout -----------------------------------------------------------
+    public function submitResetPassword(Request $request)
+    {
+        $validator = Validator::make($request->all(),
+        [
+            'new_password' => 'required',
+            'confirm_password' => 'required'
+        ]);
+        if ($validator->fails()){
+            return response()->json(['message' => $validator->errors()], 400);  
+        }
+        $user = User::where('email', Session::get('email'))->first();
+        if(!$user){
+            return response()->json(['message' => trans('lang.forgotPassword.no_user')], 401);   
+        }
+        if($request['new_password'] != $request['confirm_password']){
+            return response()->json(['message' => trans('lang.forgotPassword.incorrect_code')], 400);  
+        }
+        $user->forgot_password_code = null;
+        $user->password = $request['new_password'];
+        $user->save();
+        return response()->json(['message' => trans('lang.forgotPassword.reset_password_success')], 400);
     }
 }

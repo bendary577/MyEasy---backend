@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\CodeIndexedTrait;
 
 class Store extends Model
 {
-    use HasFactory;
+    use HasFactory, CodeIndexedTrait;
 
     protected $with = ['store'];
 
@@ -15,6 +16,7 @@ class Store extends Model
         'title',
         'customers_number',
         'orders_number',
+        'code'
     ];
 
     protected $casts = [
@@ -44,6 +46,16 @@ class Store extends Model
     public function logo()
     {
         return $this->hasOne(Logo::class);
+    }
+
+    public function getHasCompanyStoreAttribute()
+    {
+      return $this->store_type == 'App\Models\CompanyStore';
+    }
+
+    public function getHasSellerStoreAttribute()
+    {
+      return $this->store_type == 'App\Models\SellerStore';
     }
 
     public function searchableAs()

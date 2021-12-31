@@ -13,10 +13,9 @@ class CreateInvoicesTable extends Migration
             $table->string('code');
             $table->string('customer_name');
             $table->float('total_price');
-            $table->boolean('paid');
-            $table->enum('owner_type', ['seller', 'company']);
+            $table->boolean('paid')->default(false);
             $table->enum('currency', ['EGP', 'USD']);
-            $table->date('paid_at');
+            $table->date('paid_at')->nullable();
             $table->date('expiration_date');
             $table->integer('number_of_items');
             $table->string('invocie_type')->nullable();

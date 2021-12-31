@@ -93,6 +93,8 @@ return [
     |
     */
 
+    'supported_languages' => ['en' => 'English', 'ar' => 'Arabic'],
+
     'fallback_locale' => 'en',
 
     /*

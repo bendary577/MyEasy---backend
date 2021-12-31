@@ -16,29 +16,29 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/logout', 'AuthController@logout');
 
     // Category Routes
-    Route::group(['prefix' => 'category'], function () {
-        Route::get('/', 'CategoryController@getAll');
-        Route::get('/{id}', 'CategoryController@getOne');
-        Route::get('with/stores', 'CategoryController@category_store');
+    Route::group(['prefix' => 'categories'], function () {
+        Route::get('/', 'CategoryController@index');
+        Route::get('/categories-stores', 'CategoryController@indexWithStores');
+        Route::get('/{id}', 'CategoryController@get');
         Route::post('/', 'CategoryController@create');
         Route::post('/{id}', 'CategoryController@update');
-        Route::post('/delete/{id}', 'CategoryController@delete');
+        Route::get('/delete/{id}', 'CategoryController@delete');
     });
 
     // Store Routes
-    Route::group(['prefix' => 'store'], function () {
-        Route::get('/', 'StoreController@getAll');
-        Route::get('/{id}', 'StoreController@getOne');
-        Route::post('/', 'StoreController@create');
+    Route::group(['prefix' => 'stores'], function () {
+        Route::get('/', 'StoreController@index');
+        Route::get('/{category_id}', 'StoreController@indexByCategory');
+        Route::get('/{id}', 'StoreController@get');
+        Route::post('/{category_id}', 'StoreController@create');
         Route::post('/{id}', 'StoreController@update');
-        Route::post('/delete/{id}', 'StoreController@delete');
+        Route::get('/delete/{id}', 'StoreController@delete');
     });
 
     // Product Routes
-    Route::group(['prefix' => 'product'], function () {
-        Route::get('/', 'ProductController@getAll');
+    Route::group(['prefix' => 'products'], function () {
+        Route::get('/{store_id}', 'ProductController@getAll');
         Route::get('/{id}', 'ProductController@getOne');
-        Route::get('/store/{id}', 'ProductController@get_product_store');
         Route::post('/', 'ProductController@create');
         Route::post('/{id}', 'ProductController@update');
         Route::post('/delete/{id}', 'ProductController@delete');
@@ -53,41 +53,14 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/{id}', 'InvoiceController@delete');
     });
 
-    // Cart Routes
-    Route::group(['prefix' => 'cart'], function () {
-        Route::get('/', 'CartController@getAll');
-        Route::post('/', 'CartController@create');
-        Route::post('/increase', 'CartController@increase');
-        Route::post('/decrease', 'CartController@decrease');
-        Route::put('/{id}', 'CartController@update');
-        Route::post('/delete/{id}', 'CartController@destroy');
-    });
-
     // Order Routes
-    Route::group(['prefix' => 'order'], function () {
-        Route::get('/', 'OrderController@getAll');
-        Route::get('/{id}', 'OrderController@get_order');
-        Route::post('/', 'OrderController@create');
+    Route::group(['prefix' => 'orders'], function () {
+        Route::get('/', 'OrderController@index');
+        Route::get('/{id}', 'OrderController@get');
+        Route::post('/{product_id}', 'OrderController@create');
         Route::put('/{id}', 'OrderController@update');
+        Route::put('/{id}', 'OrderController@confirm');
         Route::post('/delete/{id}', 'OrderController@delete');
-    });
-
-    // Comment Routes
-    Route::group(['prefix' => 'comment'], function () {
-        Route::get('/', 'OrderController@getAll');
-        Route::post('/{id}', 'OrderController@create');
-        Route::get('/{id}', 'OrderController@getOne');
-        Route::put('/{id}', 'OrderController@update');
-        Route::post('/delete/{id}', 'OrderController@delete');
-    });
-
-    // Rating Routes
-    Route::group(['prefix' => 'rating'], function () {
-        Route::get('/user', 'RatingController@get_user_rating');
-        Route::get('/product/{id}', 'RatingController@get_product_rating');
-        Route::post('/', 'RatingController@create');
-        Route::post('/edit', 'RatingController@update');
-        Route::post('/delete/{id}', 'RatingController@delete');
     });
 
     // Complaint Routes
@@ -98,6 +71,34 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/', 'ComplaintController@create');
         Route::post('/edit/{id}', 'ComplaintController@update');
         Route::post('/delete/{id}', 'ComplaintController@delete');
+    });
+
+    // Cart Routes
+    Route::group(['prefix' => 'cart'], function () {
+        Route::get('/', 'CartController@getAll');
+        Route::post('/', 'CartController@create');
+        Route::post('/increase', 'CartController@increase');
+        Route::post('/decrease', 'CartController@decrease');
+        Route::put('/{id}', 'CartController@update');
+        Route::post('/delete/{id}', 'CartController@destroy');
+    });
+
+    // Comment Routes
+    Route::group(['prefix' => 'comment'], function () {
+        Route::get('/', 'CommentController@getAll');
+        Route::post('/{id}', 'CommentController@create');
+        Route::get('/{id}', 'CommentController@getOne');
+        Route::put('/{id}', 'CommentController@update');
+        Route::post('/delete/{id}', 'CommentController@delete');
+    });
+
+    // Rating Routes
+    Route::group(['prefix' => 'rating'], function () {
+        Route::get('/user', 'RatingController@get_user_rating');
+        Route::get('/product/{id}', 'RatingController@get_product_rating');
+        Route::post('/', 'RatingController@create');
+        Route::post('/edit', 'RatingController@update');
+        Route::post('/delete/{id}', 'RatingController@delete');
     });
 
     // Search

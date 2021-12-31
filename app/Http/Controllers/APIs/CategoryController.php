@@ -12,101 +12,133 @@ class CategoryController extends Controller
 {
     /*
         getAll categories
-        getstore category
+        getAll categories with stores
         getOne category
         create category
         update category
         delete category
     */
-    public function getAll()
+
+    /* -------------------------------------getAll categories -------------------------------------- */
+    public function index()
     {
-        if (!Auth::user()->can('getAll category')) {
-            return response(['Permission Denied']);
+        if (!Auth::user()->can('getAll stores')) {
+            return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
-        $categories = Category::paginate(10);
-        return response([
-            'message'   => 'success returned categories',
-            'data'      => $categories,
+        $cached_categories = Redis::get('categories');
+        if(isset($cached_categories)) {
+            $categories = json_decode($cached_categories, FALSE);
+            return response()->json([
+                'message' => trans('category.categories.returned.successfully'),
+                'data' => $cached_categories,
+            ], 200);
+        }else{
+            $categories = Category::all();
+            Redis::set('categories', $categories);
+            return response()->json([
+                'message'   => trans('category.categories.returned.successfully'),
+                'data'      => $categories
+            ], 200);
+        }
+    }
+
+    /* -------------------------------------getAll categories -------------------------------------- */
+    public function indexWithStores()
+    {
+        if (!Auth::user()->can('getAll stores')) {
+            return response()->json(['message'=> trans('permission.permission.denied')], 401);
+        }
+        $categories_with_stores = Redis::get('categories_with_stores');
+        if(isset($categories_with_stores)) {
+            $categories_with_stores = json_decode($categories_with_stores, FALSE);
+        }else{
+            $categories_with_stores = Category::with('stores')->get();
+            Redis::set('categories_with_stores', $categories_with_stores);
+        }
+        return response()->json([
+            'message'   => trans('category.categories.returned.successfully'),
+            'data'      => $categories_with_stores
         ], 200);
     }
 
-    public function category_store()
+    /* -------------------------------------update one order -------------------------------------- */
+    public function get($id)
     {
-        if (!Auth::user()->can('getstore category')) {
-            return response(['Permission Denied']);
+        if (!Auth::user()->can('get category')) {
+            return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
-        $categories = Category::with('store')->paginate(10);
-        return response([
-            'message'   => 'success returned categories',
-            'data'      => $categories,
-        ], 200);
+        if (Category::where('id', $id)->exists()) {
+            $category = Redis::get('category');
+            if(isset($category)) {
+                $category = json_decode($category, FALSE);
+            }else{
+                $category = Category::where('id', $id)->with('stores')->first();
+                Redis::set('category', $category);
+            }
+            return response()->json([
+                'message' => trans('category.category.returned.successfully'),
+                'data' => $category,
+            ], 200);
+        } else {
+            return response(["message" => trans('category.not.found')], 404);
+        }
     }
 
+    /* -------------------------------------update one order -------------------------------------- */
     public function create(Request $request)
     {
         if (!Auth::user()->can('create category')) {
-            return response(['Permission Denied']);
+            return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
-        $data = $request->all();
-        $validator = Validator::make($data, [
+        $validator = Validator::make($request->all(), [
             'name' => 'required|max:255|unique:categories',
         ]);
-
         if ($validator->fails()) {
-            return response(['message' => $validator->errors()], 'Validation Error');
+            return response()->json(['message' => $validator->errors()], 400);
         }
-
-        Category::create([
-            'name'  => $data['name'],
-        ]);
-        return response(['message' => 'Category record created'], 201);
+        $category = new Category();
+        $category->name = $request['name'];
+        $category->save();
+        return response()->json(['message' => trans('category.category.created.successfully')], 201);
     }
 
-    public function getOne($id)
-    {
-        if (!Auth::user()->can('get category')) {
-            return response(['Permission Denied']);
-        }
-        if (Category::where('id', $id)->exists()) {
-            $category = Category::where('id', $id)->get();
-            return response([
-                'message'   => 'One Category Return',
-                'data'      => $category
-            ], 200);
-        } else {
-            return response(["message" => "Category not found"], 404);
-        }
-    }
 
+    /* -------------------------------------update one order -------------------------------------- */
     public function update(Request $request, $id)
     {
         if (!Auth::user()->can('update category')) {
-            return response(['Permission Denied']);
+            return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
-        // return $request;
-        if (Category::where('id', $id)->exists()) {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|max:255|unique:categories',
+        ]);
+        if ($validator->fails()) {
+            return response(['message' => $validator->errors()], 400);
+        }
+        if(Category::where('id', $id)->exists()){
             $category = Category::find($id);
-            $category->name = $request->name;
+            if( $request['name']){
+                $category->name = $request['name'];
+            }
             $category->save();
-
-            return response()->json(["message" => "Category updated successfully"], 200);
+            return response(['message' => trans('category.category.updated.successfully')], 201);
         } else {
-            return response()->json(["message" => "Category not found"], 404);
+            return response()->json(["message" => trans('category.not.found')], 404);
         }
     }
 
+    /* -------------------------------------update one order -------------------------------------- */
     public function delete($id)
     {
         if (!Auth::user()->can('delete category')) {
-            return response(['Permission Denied']);
+            return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
-
         if (Category::where('id', $id)->exists()) {
             $category = Category::find($id);
             $category->delete();
-            return response(["message" => "Category record deleted"], 202);
+            return response(["message" => trans('category.category.deleted.successfully')], 202);
         } else {
-            return response(["message" => "Category not found"], 404);
+            return response(["message" => trans('category.not.found')], 404);
         }
     }
 }

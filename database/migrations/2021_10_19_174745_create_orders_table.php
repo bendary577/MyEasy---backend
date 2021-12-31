@@ -16,7 +16,7 @@ class CreateOrdersTable extends Migration
             $table->float('total_price');
             $table->enum('status', ['pending','received', 'canceled', 'being prepared', 'on the way','delivered'])->default('pending');
             $table->boolean('customer_confirm')->default(false);
-            $table->boolean('seller_confirm')->default(false);
+            $table->boolean('store_confirm')->default(false);
             $table->foreign('customer_id')->references('id')->on('customers')->onDelete('cascade');
             $table->foreign('store_id')->references('id')->on('stores')->onDelete('cascade');
             $table->timestamps();

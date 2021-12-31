@@ -20,6 +20,6 @@ class Complaint extends Model
     }
 
     public function attachments(){
-        return $this->hasMany(File::class);
+        return $this->hasMany(ComplaintAttachment::class);
     }
 }

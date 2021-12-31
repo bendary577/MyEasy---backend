@@ -4,12 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\CodeIndexedTrait;
 
 class StoreProduct extends Model
 {
-    use HasFactory;
+    use HasFactory, CodeIndexedTrait;
 
     protected $fillable = [
+        'code',
         'description',
         'available_number',
         'status',

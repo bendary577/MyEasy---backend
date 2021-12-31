@@ -15,6 +15,10 @@ use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Validator;
+use Carbon\Carbon;
+use App\Models\Customer;
+use App\Models\Store;
+use App\Models\OrderProduct;
 use Auth;
 
 class OrderController extends Controller
@@ -29,189 +33,172 @@ class OrderController extends Controller
         time order
     */
     /* -------------------------------------------get all Orders ------------------------------------------------ */
-    public function getAll()
+    public function index()
     {
+        
         if (!Auth::user()->can('getAll order')) {
-            return response(['Permission Denied']);
+            return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
-
-        $arr = [];
-        
-        $orders = Order::where('user_id', Auth::user()->id)->paginate(10);
-        
-        foreach($orders as $order){
-            array_push($arr, [
-                'order_id'=> $order->id,
-                'total'     => $order->total,
-                'date'      => $order->created_at,
-            ]);
+        $orders = Redis::get('orders');
+        if(isset($orders)) {
+            $orders = json_decode($orders, FALSE);
+        }else{
+            if(Auth::user()->getHasCustomerProfileAttribute()){
+                $orders = Order::where('customer_id', Auth::user()->profile->id)->with('orderProduct')->paginate(10);
+            }else{
+                $orders = Order::where('store_id', Auth::user()->profile->store->id)->with('orderProduct')->paginate(10);
+            }
+            Redis::set('orders', $orders);
+            return response()->json([
+                'message'   => trans('orders.orders.returned.successfully'),
+                'data'      => $orders
+            ], 200);
         }
-        
-        return response([
-            'message'   => 'Return All Orders',
-            'data'      => $arr
-        ]);
+        return response()->json([
+            'message' => trans('orders.orders.returned.successfully'),
+            'data' => $orders,
+        ], 200);
     }
 
     /* ------------------------------------- Get One Order ---------------------------------------- */
-    public function get_order($id){
+    public function get($id){
         if (!Auth::user()->can('getAll order')) {
-            return response(['Permission Denied']);
+            return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
-
         $order = Order::find($id);
-        
-        $arr = [
-            'order_code'=> $order->id,
-            'user_id'   => $order->user_id,
-            'state'     => $order->state,
-            'address'   => $order->address,
-            'total'     => $order->total,
-            'Creation'  => $order->created_at,
-            'products'  => json_decode($order->products)
-        ];
-        
-        return response([
-            'message'   => 'Return One Order',
-            'data'      => $arr
-        ]);
+        if (Order::where('id', $id)->exists()) {
+            $order = Redis::get('order');
+            if(isset($order)) {
+                $order = json_decode($order, FALSE);
+            }else{
+                $order = Order::where('id', $id)->with('storeProducts', 'logo')->get();
+                Redis::set('order', $order);
+            }
+            return response()->json([
+                'message' => trans('order.order.returned.successfully'),
+                'data' => $order,
+            ], 200);
+        } else {
+            return response()->json(["message" => trans('order.not.found')], 404);
+        }
     }
 
     /* ------------------------------------- create an Order -------------------------------------- */
-    public function create(Request $request)
+    public function create(Request $request, $product_id)
     {
         if (!Auth::user()->can('create order')) {
-            return response(['Permission Denied']);
+            return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
-
-        $arr = [];
-        $tot = 0;
-        
-        // Auth::user()->id
-        $cart = Cart::where('user_id', Auth::user()->id)->get();
-        // return $cart;
-        if(count($cart) === 0){
-            return response(['message' => 'Cart Is Empty']);
-        }
-
-        foreach($cart as $c){
-            $pro = Product::find($c->product_id);
-            array_push($arr, [
-                'product_id'=> $pro->id,
-                'name'      => $pro->name,
-                'price'     => $c->price,
-                'quantity'  => $c->quantity,
-                'total'     => $c->total,
-            ]);
-            $tot = $tot + $c->total;
-            Cart::find($c->id)->delete();
-        }
-
-        // return $tot;
-
-        Order::create([
-            'total'     => $tot,
-            'user_id'   => '1',//Auth::user()->id,
-            'products'  => json_encode($arr),
-            'state'     => 'pending',
+        $validator = Validator::make($request->all(), [
+            'title' => 'required|min:8|max:255',
         ]);
-
-        //notify seller than a customer make a new order to one of his products
-        // Event::fire(new NewOrderEvent($order));
-
-        return response(["message" => "order made successfully"], 201);
+        if ($validator->fails()) {
+            return response()->json(['message' => $validator->errors()], 400);
+        }
+        $product = Product::where('id', $product_id)->first();
+        $order_product = new OrderProduct();
+        $order_product->product()->save($product);
+        //make new order product
+        $order = new Order();
+        $order->total_price = $product->total_price;
+        $order->customer_confirm = false;
+        $order->store_confirm = false;
+        $order->status = 'pending';
+        $order->save();
+        $order->orderProduct()->save($order_product);
+        //increase customer orders number
+        $customer = Auth::user()->profile();
+        $customer->orders_number += 1;
+        $customer->save();
+        //increase store customers number and orders number
+        $store = $product->product->store;
+        $store->orders_number += 1;
+        //check if customer had made any past orders from this store
+        $number_of_past_orders = $order->where('customer_id', $customer->id)->where('store_id', $store->id)->count();
+        if($number_of_past_orders == 0){
+            $store->customers_number += 1;
+        }
+        $store->save(); 
+        $order->customer()->save($customer);
+        $order->store()->save($store);
+        //notify store that a customer has made a new order to one of his products
+        Event::fire(new NewOrderEvent($order));
+        return response(["message" =>  trans('order.order.created.successfully')], 201);
     }
 
-
-
     /* -------------------------------------update one order -------------------------------------- */
-    /*
-    public function update(Request $request, $id): \Illuminate\Http\JsonResponse
+    public function update(Request $request, $id)
     {
+        $validator = Validator::make($request->all(), [
+            'status' => 'required|in:pending,received,canceled,being prepared,on the way,delivered',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['message' => $validator->errors()], 400);
+        }
         if (Order::where('id', $id)->exists()) {
             $order = Order::find($id);
-            $order->status = is_null($request->status) ? $order->status : $request->status;
+            $order->status = $request['status'];
             $order->save();
-
+            //notify customer his order status changed
             Event::fire(new OrderStatusChangedEvent($order));
-
             return response()->json(["message" => "Order updated successfully"], 200);
         } else {
             return response()->json(["message" => "Order not found"], 404);
         }
     }
-    */
+
     /* -------------------------------------------get all Orders ------------------------------------------------ */
-    public function confirmOrder(Request $request, $id)
+    public function confirm(Request $request, $id)
     {
         if (!Auth::user()->can('confirm order')) {
-            return response(['Permission Denied']);
+            return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
-
         if (Order::where('id', $id)->exists()) {
             $order = Order::find($id);
             $user = Auth::user();
-            if($user->profile_type == 'App\Models\CompanyProfile' || $user->profile_type == 'App\Models\SellerProfile'){
-                //if seller has already confirmed the order return a message
-                if($order->seller_confirm == true){
-                    return response()->json(["message" => "you have already confirmed the order"], 200);
-                }
-                //else, confirm the order by the seller
-                $order->seller_confirm = true;
-
-                //if the order was confirmed by the customer, notify both of them and return informative message
+            if(Auth::user()->getHasCustomerProfileAttribute()){
                 if($order->customer_confirm == true){
+                    return response()->json(["message" => trans('order.order.confirmed')], 200);
+                }else{
+                    $order->customer_confirm == true;
+                    $order->save();
+                    //notify customer and store  that order has been delivered successfully
                     Event::fire(new OrderDeliveredEvent($order));
-                    return response()->json(["message" => "Order delivered successfully"], 200);
+                    return response()->json(["message" => trans('order.delivered.successfully')], 200);
                 }
-
-                //else return a message that you have successfully confirmed the order
-                return response()->json(["message" => "you have successfully confirmed the order"], 200);
+            }else{
+                if($order->store_confirm == true){
+                    return response()->json(["message" => trans('order.order.confirmed')], 200);
+                }else{
+                    $order->store_confirm == true;
+                    $order->save();
+                    return response()->json(["message" => trans('order.confirmed.successfully')], 200);
+                }
             }
-
-            //if customer has already confirmed the order return a message
-            if($order->customer_confirm == true){
-                return response()->json(["message" => "you have already confirmed the order"], 200);
-            }
-            //else, confirm the order by the seller
-            $order->customer_confirm = true;
-
-            //if the order was confirmed by the seller, notify both of them and return informative message
-            if($order->seller_confirm == true){
-                Event::fire(new OrderDeliveredEvent($order));
-                return response()->json(["message" => "Order delivered successfully"], 200);
-            }
-
-            //else return a message that you have successfully confirmed the order
-            return response()->json(["message" => "you have successfully confirmed the order"], 200);
-
         } else {
-            return response()->json(["message" => "Order not found"], 404);
+            return response()->json(["message" => trans('order.not.found')], 404);
         }
-    }
-
-    public function orderByTime(Request $request){
-        if (!Auth::user()->can('time order')) {
-            return response(['Permission Denied']);
-        }
-
-        return $request;
     }
 
     /* -------------------------------------delete order -------------------------------------- */
     public function delete($id)
     {
         if (!Auth::user()->can('delete order')) {
-            return response(['Permission Denied']);
+            return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
-
         if(Order::where('id', $id)->exists()) {
             $order = Order::find($id);
-            $order->delete();
-            // Event::fire(new OrderCanceledEvent($order));
-            return response(["message" => "Order record deleted"], 202);
+            //if order had been made more than a day age, it can't be canceled
+            if($order->created_at > Carbon::now()->subDays(1)->toDateTimeString()){
+                return response()->json(["message" => trans('order.cant.be.canceled')], 200);
+            }else{
+                $order->delete();
+                //notify customer and store  that order has been delivered canceled
+                Event::fire(new OrderCanceledEvent($order));
+                return response()->json(["message" => trans('order.deleted.successfully')], 200);
+            }
         } else {
-            return response(["message" => "Order not found"], 404);
+            return response()->json(["message" => trans('order.not.found')], 404);
         }
     }
 }

@@ -11,6 +11,7 @@ class CreateStoreProductsTable extends Migration
         Schema::create('store_products', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('store_id')->nullable();
+            $table->integer('code');
             $table->string('description')->nullable();
             $table->enum('status', ['new', 'used'])->nullable();
             $table->float('ratings_value')->default(0);
