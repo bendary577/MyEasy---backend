@@ -17,8 +17,8 @@ Route::group(['middleware' => ['cors', 'json.response']], function () {
 Route::middleware('auth:api')->group(function () {
     //User Routes
     Route::group(['prefix' => 'user'], function () {
-        Route::get('/{id}', 'UserController@get');
-        Route::post('/{id}', 'UserController@update');
+        Route::get('/', 'UserController@get');
+        Route::post('/', 'UserController@update');
         Route::post('/logout', 'UserController@logout');
     });
 

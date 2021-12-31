@@ -20,6 +20,6 @@ class SearchController extends Controller
                 'products' => $products
             ], 200);
         }
-        return response()->json(['message' => "sorry, we can't find your search",], 200);
+        return response()->json(['message' => "sorry, we can't find your search"], 200);
     }
 }
