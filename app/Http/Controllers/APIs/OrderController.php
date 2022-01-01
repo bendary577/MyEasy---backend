@@ -36,7 +36,7 @@ class OrderController extends Controller
     public function index()
     {
         
-        if (!Auth::user()->can('getAll order')) {
+        if (!Auth::user()->can('get_all_orders')) {
             return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
         $orders = Redis::get('orders');
@@ -49,10 +49,6 @@ class OrderController extends Controller
                 $orders = Order::where('store_id', Auth::user()->profile->store->id)->with('orderProduct')->paginate(10);
             }
             Redis::set('orders', $orders);
-            return response()->json([
-                'message'   => trans('orders.orders.returned.successfully'),
-                'data'      => $orders
-            ], 200);
         }
         return response()->json([
             'message' => trans('orders.orders.returned.successfully'),
@@ -62,7 +58,7 @@ class OrderController extends Controller
 
     /* ------------------------------------- Get One Order ---------------------------------------- */
     public function get($id){
-        if (!Auth::user()->can('getAll order')) {
+        if (!Auth::user()->can('get_order_details')) {
             return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
         $order = Order::find($id);
@@ -86,7 +82,7 @@ class OrderController extends Controller
     /* ------------------------------------- create an Order -------------------------------------- */
     public function create(Request $request, $product_id)
     {
-        if (!Auth::user()->can('create order')) {
+        if (!Auth::user()->can('create_order')) {
             return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
         $validator = Validator::make($request->all(), [
@@ -129,6 +125,9 @@ class OrderController extends Controller
     /* -------------------------------------update one order -------------------------------------- */
     public function update(Request $request, $id)
     {
+        if (!Auth::user()->can('update_order')) {
+            return response()->json(['message'=> trans('permission.permission.denied')], 401);
+        }
         $validator = Validator::make($request->all(), [
             'status' => 'required|in:pending,received,canceled,being prepared,on the way,delivered',
         ]);
@@ -150,13 +149,13 @@ class OrderController extends Controller
     /* -------------------------------------------get all Orders ------------------------------------------------ */
     public function confirm(Request $request, $id)
     {
-        if (!Auth::user()->can('confirm order')) {
+        if (!Auth::user()->can('confirm_order')) {
             return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
         if (Order::where('id', $id)->exists()) {
             $order = Order::find($id);
             $user = Auth::user();
-            if(Auth::user()->getHasCustomerProfileAttribute()){
+            if($user->getHasCustomerProfileAttribute()){
                 if($order->customer_confirm == true){
                     return response()->json(["message" => trans('order.order.confirmed')], 200);
                 }else{
@@ -183,7 +182,7 @@ class OrderController extends Controller
     /* -------------------------------------delete order -------------------------------------- */
     public function delete($id)
     {
-        if (!Auth::user()->can('delete order')) {
+        if (!Auth::user()->can('delete_order')) {
             return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
         if(Order::where('id', $id)->exists()) {

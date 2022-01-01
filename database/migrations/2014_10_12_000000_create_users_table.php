@@ -21,7 +21,7 @@ class CreateUsersTable extends Migration
             $table->string('zipcode')->nullable();
             $table->string('bio')->nullable();
             $table->string('activation_token');
-            $table->float('availabel_money_amnt')->nullable();
+            $table->float('available_money_amnt')->nullable();
             $table->boolean('blocked')->default(false);
             $table->boolean('account_activated')->default(false);
             $table->date('account_activated_at')->nullable();

@@ -10,6 +10,8 @@ class CreateAdminsTable extends Migration
     {
         Schema::create('admins', function (Blueprint $table) {
             $table->id();
+            $table->enum('gender', ['male', 'female']);
+            $table->date('birth_date');
             $table->timestamps();
         });
     }

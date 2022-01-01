@@ -13,6 +13,8 @@ class User extends Authenticatable
 {
     use HasRoles, HasApiTokens, HasFactory, Notifiable;
 
+    protected $with = ['profile'];
+    
     protected $fillable = [
         'name',
         'username',
@@ -38,8 +40,6 @@ class User extends Authenticatable
     protected $casts = [
         'account_activated_at' => 'datetime',
     ];
-
-    protected $with = ['profile'];
 
     public function profile()
     {

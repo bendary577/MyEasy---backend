@@ -23,7 +23,7 @@ class ComplaintController extends Controller
     /* -------------------------------------get one store -------------------------------------- */
     public function index()
     {
-        if (!Auth::user()->can('getAll complaint')) {
+        if (!Auth::user()->can('get_all_complaints')) {
             return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
         $complaints = Redis::get('complaints');
@@ -40,9 +40,28 @@ class ComplaintController extends Controller
     }
 
     /* -------------------------------------get one store -------------------------------------- */
+    public function getUserComplaints()
+    {
+        if (!Auth::user()->can('get_user_complaints') || Auth::user()->getHasAdminProfileAttribute()) {
+            return response()->json(['message'=> trans('permission.permission.denied')], 401);
+        }
+        $user_complaints = Redis::get('user_complaints');
+        if(isset($user_complaints)) {
+            $user_complaints = json_decode($user_complaints, FALSE);
+        }else{
+            $user_complaints = Complaint::where('id', Auth::user()->id)->paginate(10);
+            Redis::set('user_complaints', $user_complaints);
+        }
+        return response()->json([
+            'message'   => trans('complaint.complaints.returned.successfully'),
+            'data'      => $user_complaints
+        ], 200);
+    }
+
+    /* -------------------------------------get one store -------------------------------------- */
     public function get($id)
     {
-        if (!Auth::user()->can('user complaint')) {
+        if (!Auth::user()->can('get_complaint_details')) {
             return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
         if (Complaint::where('id', $id)->exists()) {
@@ -65,7 +84,7 @@ class ComplaintController extends Controller
     /* -------------------------------------get one store -------------------------------------- */
     public function Create(Request $request)
     {
-        if (!Auth::user()->can('create complaint')) {
+        if (!Auth::user()->can('create_complaint')) {
             return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
         $validator = Validator::make($request->all(), [
@@ -104,7 +123,7 @@ class ComplaintController extends Controller
     /* -------------------------------------get one store -------------------------------------- */
     public function update(Request $request, $id)
     {
-        if (!Auth::user()->can('update complaint')) {
+        if (!Auth::user()->can('update_complaint')) {
             return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
         $validator = Validator::make($request->all(), [
@@ -126,7 +145,7 @@ class ComplaintController extends Controller
     /* -------------------------------------get one store -------------------------------------- */
     public function delete($id)
     {
-        if (!Auth::user()->can('delete complaint')) {
+        if (!Auth::user()->can('delete_complaint')) {
             return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
         if (Complaint::where('id', $id)->exists()) {

@@ -9,9 +9,9 @@ Route::group(['middleware' => ['cors', 'json.response']], function () {
     Route::post('/register', 'AuthController@register');
     Route::post('/login', 'AuthController@login');
     Route::post('/{id}/activate-user', 'AuthController@activateUser');
-    Route::post('/send-code', 'AuthController@forgotPasswordSendCode');
-    Route::post('/check-code', 'AuthController@activateForgotPasswordCode');
-    Route::post('/reset-password', 'AuthController@submitResetPassword');
+    Route::post('/send-code', 'AuthController@sendForgotPasswordCode');
+    Route::post('/check-code', 'AuthController@checkForgotPasswordCode');
+    Route::post('/reset-password', 'AuthController@resetPassword');
 });
 
 Route::middleware('auth:api')->group(function () {
@@ -35,7 +35,7 @@ Route::middleware('auth:api')->group(function () {
     // Store Routes
     Route::group(['prefix' => 'stores'], function () {
         Route::get('/', 'StoreController@index');
-        Route::get('/{category_id}', 'StoreController@indexByCategory');
+        Route::get('/{category_id}', 'StoreController@getStoresByCategory');
         Route::get('/{id}', 'StoreController@get');
         Route::post('/{category_id}', 'StoreController@create');
         Route::post('/{id}', 'StoreController@update');
@@ -72,12 +72,12 @@ Route::middleware('auth:api')->group(function () {
 
     // Complaint Routes
     Route::group(['prefix' => 'complaint'], function () {
-        Route::get('/', 'ComplaintController@getAll');
-        Route::get('/{id}', 'ComplaintController@getOne');
-        Route::get('/user', 'ComplaintController@get_user_complaint');
+        Route::get('/', 'ComplaintController@index');
+        Route::get('/user/{id}', 'ComplaintController@getUserComplaints');
+        Route::get('/{id}', 'ComplaintController@get');
         Route::post('/', 'ComplaintController@create');
         Route::post('/edit/{id}', 'ComplaintController@update');
-        Route::post('/delete/{id}', 'ComplaintController@delete');
+        Route::get('/delete/{id}', 'ComplaintController@delete');
     });
 
     // Cart Routes
@@ -111,20 +111,4 @@ Route::middleware('auth:api')->group(function () {
     // Search
     Route::post('/search', 'SearchController@search');
 
-    Route::get('/user', function () {
-        $roles = [];
-        $user = User::first();
-
-        foreach ($user->roles as $role) {
-            array_push($roles, $role->name);
-        }
-
-        $data = [
-            "name"  => $user->first_name . ' ' . $user->second_name,
-            "email"  => $user->email,
-            "phone"  => $user->phone_number,
-            "roles" => $roles
-        ];
-        return $data;
-    });
 });

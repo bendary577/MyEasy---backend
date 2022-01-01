@@ -26,12 +26,16 @@ class InvoiceController extends Controller
     /* -------------------------------------------get all Invoices ------------------------------------------------ */
     public function index()
     {
-        $this->authorize('getAll stores');
+        $this->authorize('get_all_invoices');
         $invoices = Redis::get('invoices');
         if(isset($invoices)) {
             $invoices = json_decode($invoices, FALSE);
         }else{
-            $invoices = Invoice::where('user_id', Auth::user()->id)->paginate(10);
+            if(Auth::user()->getHasCompanyProfileAttribute()){
+                $invoices = CompanyInvoice::where('company_id', Auth::user()->profile->id)->paginate(10);
+            }else if(Auth::user()->getHasSellerProfileAttribute()){
+                $invoices = SellerInvoice::where('company_id', Auth::user()->profile->id)->paginate(10);
+            }
             Redis::set('invoices', $invoices);
         }
         return response()->json([
@@ -43,7 +47,7 @@ class InvoiceController extends Controller
     /* -------------------------------------get one Invoice -------------------------------------- */
     public function get($id)
     {
-        if (!Auth::user()->can('get invoice')) {
+        if (!Auth::user()->can('get_invoice_details')) {
             return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
         if (Invoice::where('id', $id)->exists()) {
@@ -66,7 +70,7 @@ class InvoiceController extends Controller
     /* ------------------------------------- create an Invoice -------------------------------------- */
     public function create(Request $request)
     {
-        if (!Auth::user()->can('create invoice')) {
+        if (!Auth::user()->can('create_invoice')) {
             return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
         $validator = Validator::make($request->all(), [
@@ -113,7 +117,7 @@ class InvoiceController extends Controller
     /* -------------------------------------update one Invoice -------------------------------------- */
     public function update(Request $request, $id)
     {
-        if (!Auth::user()->can('update invoice')) {
+        if (!Auth::user()->can('update_invoice')) {
             return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
         $validator = Validator::make($request->all(), [
@@ -159,7 +163,7 @@ class InvoiceController extends Controller
     /* -------------------------------------delete Invoice -------------------------------------- */
     public function delete($id)
     {
-        if (!Auth::user()->can('delete invoice')) {
+        if (!Auth::user()->can('delete_invoice')) {
             return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
         if (Invoice::where('id', $id)->exists()) {

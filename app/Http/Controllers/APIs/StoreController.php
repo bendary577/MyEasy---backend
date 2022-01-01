@@ -28,7 +28,7 @@ class StoreController extends Controller
     /* -------------------------------------------get all store ------------------------------------------------ */
     public function index()
     {
-        if (!Auth::user()->can('getAll stores')) {
+        if (!Auth::user()->can('get_all_stores')) {
             return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
         $stores = Redis::get('stores');
@@ -45,9 +45,9 @@ class StoreController extends Controller
     }
 
     /* ------------------------------------------- get all stores by category ------------------------------------------------ */
-    public function indexByCategory($category_id)
+    public function getStoresByCategory($category_id)
     {
-        if (!Auth::user()->can('getAll stores')) {
+        if (!Auth::user()->can('get_all_stores_by_category')) {
             return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
         $stores = Redis::get('stores');
@@ -66,7 +66,7 @@ class StoreController extends Controller
     /* -------------------------------------get one store -------------------------------------- */
     public function get($id)
     {
-        if (!Auth::user()->can('get store')) {
+        if (!Auth::user()->can('get_store_details')) {
             return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
         if (Store::where('id', $id)->exists()) {
@@ -89,7 +89,7 @@ class StoreController extends Controller
     /* ------------------------------------- create an store -------------------------------------- */
     public function create(Request $request, $category_id)
     {
-        if (!Auth::user()->can('create store')) {
+        if (!Auth::user()->can('create_store')) {
             return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
         $validator = Validator::make($request->all(), [
@@ -120,7 +120,7 @@ class StoreController extends Controller
     /* -------------------------------------update one store -------------------------------------- */
     public function update(Request $request, $id)
     {
-        if (!Auth::user()->can('update store')) {
+        if (!Auth::user()->can('update_store')) {
             return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
         $validator = Validator::make($request->all(), [
@@ -162,7 +162,7 @@ class StoreController extends Controller
     /* -------------------------------------delete store -------------------------------------- */
     public function delete($id)
     {
-        if (!Auth::user()->can('delete store')) {
+        if (!Auth::user()->can('delete_store')) {
             return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
         if (Store::where('id', $id)->exists()) {

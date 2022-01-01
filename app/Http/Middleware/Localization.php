@@ -22,24 +22,24 @@ class Localization
         // if the header is missed
         if(!$locale){
             // take the default local language
-            $locale = $this->app->config->get('app.locale');
+            //$locale = $this->app->config->get('app.locale');
+            $locale = config('app.locale');
         }
 
         // check the languages defined is supported
-        if (!array_key_exists($locale, $this->app->config->get('app.supported_languages'))) {
+        if (!array_key_exists($locale, config('app.supported_languages'))) {
             // respond with error
             return response()->json(['message' => 'Language not supported'], 403);
         }
 
         // set the local language
-        $this->app->setLocale($locale);
+        app()->setLocale($locale);
 
         // get the response after the request is done
         $response = $next($request);
 
         // set Content Languages header in the response
         $response->headers->set('Content-Language', $locale);
-
         // return the response
         return $response;
     }

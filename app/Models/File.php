@@ -15,7 +15,6 @@ class File extends Model
         'name',
         'extention',
         'path',
-        'size',
     ];
 
     public function file()

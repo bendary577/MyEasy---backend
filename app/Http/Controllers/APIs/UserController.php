@@ -14,6 +14,11 @@ use App\Models\User;
 class UserController extends Controller
 {
 
+    /*
+        get
+        update
+        logout
+    */
     //----------------------------------------------------- return user info -----------------------------------------------
     public function get(Request $request)
     {

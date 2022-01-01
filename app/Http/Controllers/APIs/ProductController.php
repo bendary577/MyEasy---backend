@@ -23,7 +23,7 @@ class ProductController extends Controller
     /* -------------------------------------------get all store products ------------------------------------------------ */
     public function index($store_id)
     {
-        if (!Auth::user()->can('getAll product')) {
+        if (!Auth::user()->can('get_all_store_products')) {
             return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
         $products = Redis::get('products');
@@ -43,7 +43,7 @@ class ProductController extends Controller
     /* -------------------------------------get store product details -------------------------------------- */
     public function get($id)
     {
-        if (!Auth::user()->can('get product')) {
+        if (!Auth::user()->can('get_product_details')) {
             return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
         if (Product::where('id', $id)->exists()) {
@@ -66,7 +66,7 @@ class ProductController extends Controller
     /* ------------------------------------- create a store product -------------------------------------- */
     public function create(Request $request)
     {
-        if (!Auth::user()->can('create product')) {
+        if (!Auth::user()->can('create_product')) {
             return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
         $validator = Validator::make($request->all(), [
@@ -114,7 +114,7 @@ class ProductController extends Controller
     /* -------------------------------------update one product -------------------------------------- */
     public function update(Request $request, $id)
     {
-        if (!Auth::user()->can('update product')) {
+        if (!Auth::user()->can('update_product')) {
             return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
         $validator = Validator::make($request->all(), [
@@ -173,13 +173,13 @@ class ProductController extends Controller
     /* -------------------------------------delete product -------------------------------------- */
     public function delete($id)
     {
-        if (!Auth::user()->can('delete product')) {
+        if (!Auth::user()->can('delete_product')) {
             return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
         if (Product::where('id', $id)->exists()) {
             $product = Product::find($id);
             $product->delete();
-            return response()->json(["message" => trans('product.deleted.successfully')], 202);
+            return response()->json(["message" => trans('product.deleted.successfully')], 200);
         } else {
             return response()->json(["message" => trans('product.not.found')], 404);
         }

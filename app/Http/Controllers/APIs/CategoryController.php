@@ -22,7 +22,7 @@ class CategoryController extends Controller
     /* -------------------------------------getAll categories -------------------------------------- */
     public function index()
     {
-        if (!Auth::user()->can('getAll stores')) {
+        if (!Auth::user()->can('get_all_categories')) {
             return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
         $cached_categories = Redis::get('categories');
@@ -45,7 +45,7 @@ class CategoryController extends Controller
     /* -------------------------------------getAll categories -------------------------------------- */
     public function indexWithStores()
     {
-        if (!Auth::user()->can('getAll stores')) {
+        if (!Auth::user()->can('get_categories_with_stores')) {
             return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
         $categories_with_stores = Redis::get('categories_with_stores');
@@ -64,7 +64,7 @@ class CategoryController extends Controller
     /* -------------------------------------update one order -------------------------------------- */
     public function get($id)
     {
-        if (!Auth::user()->can('get category')) {
+        if (!Auth::user()->can('get_category_details')) {
             return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
         if (Category::where('id', $id)->exists()) {
@@ -87,7 +87,7 @@ class CategoryController extends Controller
     /* -------------------------------------update one order -------------------------------------- */
     public function create(Request $request)
     {
-        if (!Auth::user()->can('create category')) {
+        if (!Auth::user()->can('create_category')) {
             return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
         $validator = Validator::make($request->all(), [
@@ -106,7 +106,7 @@ class CategoryController extends Controller
     /* -------------------------------------update one order -------------------------------------- */
     public function update(Request $request, $id)
     {
-        if (!Auth::user()->can('update category')) {
+        if (!Auth::user()->can('update_category')) {
             return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
         $validator = Validator::make($request->all(), [
@@ -130,7 +130,7 @@ class CategoryController extends Controller
     /* -------------------------------------update one order -------------------------------------- */
     public function delete($id)
     {
-        if (!Auth::user()->can('delete category')) {
+        if (!Auth::user()->can('delete_category')) {
             return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
         if (Category::where('id', $id)->exists()) {
