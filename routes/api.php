@@ -8,8 +8,8 @@ use Illuminate\Support\Facades\Route;
 Route::group(['middleware' => ['cors', 'json.response']], function () {
     Route::post('/register', 'AuthController@register');
     Route::post('/login', 'AuthController@login');
-    Route::post('/{id}/activate-user', 'AuthController@activateUser');
-    Route::post('/send-code', 'AuthController@sendForgotPasswordCode');
+    Route::get('/{id}/activate-user', 'AuthController@activateUser');
+    Route::get('/send-code', 'AuthController@sendForgotPasswordCode');
     Route::post('/check-code', 'AuthController@checkForgotPasswordCode');
     Route::post('/reset-password', 'AuthController@resetPassword');
 });
@@ -17,9 +17,9 @@ Route::group(['middleware' => ['cors', 'json.response']], function () {
 Route::middleware('auth:api')->group(function () {
     //User Routes
     Route::group(['prefix' => 'user'], function () {
-        Route::get('/', 'UserController@get');
-        Route::post('/', 'UserController@update');
-        Route::post('/logout', 'UserController@logout');
+        Route::get('/get', 'UserController@get');
+        Route::post('/update', 'UserController@update');
+        Route::get('/logout', 'UserController@logout');
     });
 
     // Category Routes
@@ -36,19 +36,20 @@ Route::middleware('auth:api')->group(function () {
     Route::group(['prefix' => 'stores'], function () {
         Route::get('/', 'StoreController@index');
         Route::get('/{category_id}', 'StoreController@getStoresByCategory');
-        Route::get('/{id}', 'StoreController@get');
+        Route::get('/store/{id}', 'StoreController@get');
+        Route::get('/user', 'StoreController@getUserStore');
         Route::post('/{category_id}', 'StoreController@create');
-        Route::post('/{id}', 'StoreController@update');
+        Route::post('/{id}/update', 'StoreController@update');
         Route::get('/delete/{id}', 'StoreController@delete');
     });
 
     // Product Routes
     Route::group(['prefix' => 'products'], function () {
-        Route::get('/{store_id}', 'ProductController@getAll');
-        Route::get('/{id}', 'ProductController@getOne');
-        Route::post('/', 'ProductController@create');
-        Route::post('/{id}', 'ProductController@update');
-        Route::post('/delete/{id}', 'ProductController@delete');
+        Route::get('/{store_id}/products', 'ProductController@index');
+        Route::get('/{id}/details', 'ProductController@get');
+        Route::post('/{store_id}/upload-product', 'ProductController@create');
+        Route::post('/{id}/update', 'ProductController@update');
+        Route::get('/{id}/delete', 'ProductController@delete');
     });
 
     // Invoice Routes
@@ -64,10 +65,10 @@ Route::middleware('auth:api')->group(function () {
     Route::group(['prefix' => 'orders'], function () {
         Route::get('/', 'OrderController@index');
         Route::get('/{id}', 'OrderController@get');
-        Route::post('/{product_id}', 'OrderController@create');
-        Route::put('/{id}', 'OrderController@update');
-        Route::put('/{id}', 'OrderController@confirm');
-        Route::post('/delete/{id}', 'OrderController@delete');
+        Route::post('/{product_id}/make-order', 'OrderController@create');
+        Route::post('/{id}/update', 'OrderController@update');
+        Route::get('/{id}/confirm', 'OrderController@confirm');
+        Route::get('/{id}/delete', 'OrderController@delete');
     });
 
     // Complaint Routes

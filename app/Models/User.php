@@ -25,6 +25,7 @@ class User extends Authenticatable
         'zipcode',
         'bio',
         'blocked',
+        'approved',
         'account_activated',
         'account_activated_at',
         'activation_token',

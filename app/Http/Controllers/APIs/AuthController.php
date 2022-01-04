@@ -21,6 +21,10 @@ use App\Models\TaxCard;
 use App\Models\CommercialRecord;
 use App\Http\Requests\Auth\Register;
 use App\Http\Requests\Auth\Login;
+use Carbon\Carbon;
+use App\Events\UserAccountActivatedEvent;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
@@ -35,7 +39,6 @@ class AuthController extends Controller
     //---------------------------------------------------- Register -----------------------------------------------------------
     public function register(Register $request)
     {
-        print_r("hello");
         $validator = Validator::make($request->all(), [
             'name' => 'required|max:255',
             'username' => 'required|max:255',
@@ -45,7 +48,7 @@ class AuthController extends Controller
             'address' => 'required|string',
             'zipcode' => 'required',
             'gender' => 'in:male,female',
-            'birth_date' => 'date',
+            'birth_date' => '',
         ]);
         if ($validator->fails()) {
             return response()->json(['message' => $validator->errors()], 400);
@@ -199,7 +202,7 @@ class AuthController extends Controller
             $user->account_activated_at = Carbon::now();
             $user->save(); 
             //notify user that his account was activated
-            Event::fire(new UserAccountActivatedEvent($user));
+            Event::dispatch(new UserAccountActivatedEvent($user));
             return response()->json(['message' => trans('auth.account.activated.successfully')], 200);
         }else{
             return response()->json(['message' => trans('auth.user.doesnt.exist')], 404);  

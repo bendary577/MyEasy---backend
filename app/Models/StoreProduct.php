@@ -19,6 +19,11 @@ class StoreProduct extends Model
         'ratings_value',
     ]; 
 
+    public function product() 
+    { 
+      return $this->morphOne('App\Models\Product', 'product');
+    }
+    
     public function store()
     {
         return $this->belongsTo(Store::class);

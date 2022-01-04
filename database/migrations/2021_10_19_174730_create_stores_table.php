@@ -16,6 +16,7 @@ class CreateStoresTable extends Migration
             $table->integer('code');
             $table->integer('orders_number')->default(0);
             $table->integer('customers_number')->default(0);
+            $table->integer('products_number')->default(0);
             $table->string('store_type')->nullable();
             $table->unsignedInteger('store_id')->nullable();
             $table->foreign('category_id')->references('id')->on('categories')->onDelete('cascade');

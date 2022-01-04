@@ -10,6 +10,10 @@ use Illuminate\Support\Facades\Validator;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use App\Models\User;
+use App\Models\File;
+use App\Models\Avatar;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Redis;
 
 class UserController extends Controller
 {
@@ -22,16 +26,7 @@ class UserController extends Controller
     //----------------------------------------------------- return user info -----------------------------------------------
     public function get(Request $request)
     {
-        if(!Auth::user()->can('get user')) {
-            return response()->json(['message'=> trans('permission.permission.denied')], 401);
-        }
-        $user = Redis::get('user');
-        if(isset($user)) {
-            $user = json_decode($user, FALSE);
-        }else{
-            $user = User::where('id', Auth::user()->id)->with('avatar')->get();
-            Redis::set('user', $user);
-        }
+        $user = User::where('id', Auth::user()->id)->with('avatar')->get();
         return response()->json([
             'message'   => trans('user.user.returned.successfully'),
             'data'      => $user
@@ -41,18 +36,15 @@ class UserController extends Controller
     //----------------------------------------------------- update user info  ----------------------------------------------
     public function update(Request $request)
     {
-        if(!Auth::user()->can('update user')) {
-            return response()->json(['message'=> trans('permission.permission.denied')], 401);
-        }
         $validator = Validator::make($request->all(), [
             'name' => 'required|max:255',
-            'phone' => 'required|integer',
-            'address' => 'required|in:new,used',
-            'zipcode' => 'required|in:new,used',
-            'bio' => 'required|in:new,used',
-            'avatar' => 'required|in:new,used',
-            'gender' => 'required|in:new,used',
-            'birth_date' => 'required|in:new,used',
+            'phone' => 'string',
+            'address' => 'string',
+            'zipcode' => 'string',
+            'bio' => 'string',
+            'avatar' => '',
+            'gender' => 'in:male,female',
+            'birth_date' => '',
         ]);
         if ($validator->fails()) {
             return response()->json(['message' => $validator->errors()], 400);
@@ -71,7 +63,7 @@ class UserController extends Controller
             $user->zipcode = $request['zipcode'];
         }
         if($request['bio']){
-            $user->profile->bio = $request['bio'];
+            $user->bio = $request['bio'];
         }
         if($request['gender'] && !$user->getHasCompanyProfileAttribute() ){
             $user->profile->gender = $request['gender'];
@@ -83,7 +75,6 @@ class UserController extends Controller
             //get request file data
             $avatar_file = $request->file('avatar');
             $avatar_file_name = $avatar_file->getClientOriginalName();
-            $avatar_file_size = $avatar_file->getClientSize();
             $avatar_file_extention = $avatar_file->extension();
             $avatar_file_path = '/accounts/'.$user->id.'/avatar/';
             //make new file
@@ -91,10 +82,9 @@ class UserController extends Controller
             $file->name = $avatar_file_name;
             $file->path = $avatar_file_path;
             $file->extention = $avatar_file_extention;
-            $file->size = $avatar_file_size;
             $avatar = new Avatar();
             $avatar->file()->save($file);
-            $avatar->store()->user($user)->save();
+            $avatar->user()->associate($user)->save();
             $avatar_file->move(public_path().$avatar_file_path, $avatar_file_name);
         }
         $user->save();
@@ -103,8 +93,12 @@ class UserController extends Controller
     //----------------------------------------------------- Logout -----------------------------------------------------------
     public function logout(Request $request)
     {
-        $token = $request->user()->token();
-        $token->revoke();
-        return response()->json(['message' => trans('auth.logged.out.successfully')], 200);
+        if(Auth::user()){
+            $token = Auth::user()->token();
+            $token->revoke();
+            return response()->json(['message' => trans('auth.logged.out.successfully')], 200);
+        }else{
+            return response()->json(['message' => 'you must login first'], 404);
+        }  
     }
 }

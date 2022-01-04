@@ -16,6 +16,7 @@ class Store extends Model
         'title',
         'customers_number',
         'orders_number',
+        'products_number',
         'code'
     ];
 

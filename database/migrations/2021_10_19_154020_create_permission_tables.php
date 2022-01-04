@@ -133,6 +133,7 @@ class CreatePermissionTables extends Migration
                 Permission::create(['name' => 'get_all_stores', 'guard_name' => 'api'])->assignRole($ROLE_ADMIN);
                 Permission::create(['name' => 'get_all_stores_by_category', 'guard_name' => 'api'])->assignRole($ROLE_CUSTOMER)->assignRole($ROLE_ADMIN)->assignRole($ROLE_SELLER)->assignRole($ROLE_COMPANY);
                 Permission::create(['name' => 'get_store_details', 'guard_name' => 'api'])->assignRole($ROLE_CUSTOMER)->assignRole($ROLE_ADMIN)->assignRole($ROLE_SELLER)->assignRole($ROLE_COMPANY);
+                Permission::create(['name' => 'get_user_store', 'guard_name' => 'api'])->assignRole($ROLE_COMPANY)->assignRole($ROLE_SELLER);
                 Permission::create(['name' => 'create_store', 'guard_name' => 'api'])->assignRole($ROLE_SELLER)->assignRole($ROLE_COMPANY);
                 Permission::create(['name' => 'update_store', 'guard_name' => 'api'])->assignRole($ROLE_SELLER)->assignRole($ROLE_COMPANY);
                 Permission::create(['name' => 'delete_store', 'guard_name' => 'api'])->assignRole($ROLE_SELLER)->assignRole($ROLE_COMPANY);

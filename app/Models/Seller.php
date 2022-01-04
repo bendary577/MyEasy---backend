@@ -37,4 +37,9 @@ class Seller extends Model
         return $this->hasOne(NationalIdentity::class);
     }
 
+    public function ownThisStore($id)
+    {
+        $seller_store = SellerStore::where('seller_id', $this->id)->with('store')->first();
+        return $seller_store->store->id == $id;
+    }
 }

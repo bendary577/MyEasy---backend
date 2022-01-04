@@ -40,4 +40,10 @@ class Company extends Model
         return $this->hasOne(CommercialRecord::class);
     }
 
+    public function ownThisStore($id)
+    {
+        $company_store = CompanyStore::where('company_id', $this->id)->with('store')->first();
+        return $company_store->store->id == $id;
+    }
+
 }

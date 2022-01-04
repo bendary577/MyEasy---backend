@@ -2,7 +2,7 @@
  return [ 
     'orders.returned.successfully' => 'all orders returned successfully',
     'order.returned.successfully' => 'order returned successfully',
-    'created.successfully' => 'order created successfully',
+    'order.created.successfully' => 'order created successfully',
     'updated.successfully' => 'order updated successfully',
     'deleted.successfully' => 'order deleted successfully',
     'status.changed.successfully' => 'order status changed successfully',
