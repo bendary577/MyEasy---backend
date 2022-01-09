@@ -18,7 +18,7 @@ class CreateInvoicesTable extends Migration
             $table->date('paid_at')->nullable();
             $table->date('expiration_date');
             $table->integer('number_of_items');
-            $table->string('invocie_type')->nullable();
+            $table->string('invoice_type')->nullable();
             $table->unsignedInteger('invoice_id')->nullable();
             $table->timestamps();
         });

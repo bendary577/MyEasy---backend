@@ -12,6 +12,8 @@ use App\Models\Company;
 use App\Models\Seller;
 use App\Models\CompanyInvoice;
 use App\Models\SellerInvoice;
+use App\Models\Product;
+use App\Models\InvoiceItem;
 
 class InvoiceController extends Controller
 {
@@ -26,17 +28,25 @@ class InvoiceController extends Controller
     /* -------------------------------------------get all Invoices ------------------------------------------------ */
     public function index()
     {
-        $this->authorize('get_all_invoices');
+        //$this->authorize('get_all_invoices');
+        if (!Auth::user()->can('get_all_invoices')){
+            return response()->json(['message'=> trans('permission.permission.denied')], 401);
+        }
         $invoices = Redis::get('invoices');
-        if(isset($invoices)) {
+        if(isset($invoices)){
             $invoices = json_decode($invoices, FALSE);
         }else{
             if(Auth::user()->getHasCompanyProfileAttribute()){
                 $invoices = CompanyInvoice::where('company_id', Auth::user()->profile->id)->paginate(10);
             }else if(Auth::user()->getHasSellerProfileAttribute()){
-                $invoices = SellerInvoice::where('company_id', Auth::user()->profile->id)->paginate(10);
+                $invoices = SellerInvoice::where('seller_id', Auth::user()->profile->id)->paginate(10);
             }
             Redis::set('invoices', $invoices);
+        }
+        if(count(array($invoices)) <=  1 ){
+            return response()->json([
+                'message'   => "sorry, no invoices are currently registered in your account",
+            ], 404);
         }
         return response()->json([
             'message' => trans('invoice.invoices.returned.successfully'),
@@ -47,7 +57,7 @@ class InvoiceController extends Controller
     /* -------------------------------------get one Invoice -------------------------------------- */
     public function get($id)
     {
-        if (!Auth::user()->can('get_invoice_details')) {
+        if (!Auth::user()->can('get_invoice_details')){
             return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
         if (Invoice::where('id', $id)->exists()) {
@@ -70,7 +80,7 @@ class InvoiceController extends Controller
     /* ------------------------------------- create an Invoice -------------------------------------- */
     public function create(Request $request)
     {
-        if (!Auth::user()->can('create_invoice')) {
+        if(!Auth::user()->can('create_invoice')) {
             return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
         $validator = Validator::make($request->all(), [
@@ -79,7 +89,7 @@ class InvoiceController extends Controller
             'expiration_date' => 'required|date',
             'currency' => 'in:EGP,USD'
         ]);
-        if ($validator->fails()) {
+        if($validator->fails()){
             return response(['message' => $validator->errors()], 400);
         }
         $invoice = new Invoice();
@@ -93,14 +103,16 @@ class InvoiceController extends Controller
         $invoice->save();
         for($i = 0; $i < $request['number_of_items']; $i++){
             $product = new Product();
-            $product->name = $request[$i+'_item_name'];
-            $product->price = $request[$i+'_item_price'];
+            $product->name = $request[++$i.'_item_name'];
+            $product->price = $request[$i.'_item_price'];
             $product->save();
             $invoice_item = new InvoiceItem();
-            $invoice_item->quantity = $request[$i+'_item_quantity'];
+            $invoice_item->quantity = $request[$i.'_item_quantity'];
+            $invoice_item->save();
             $invoice_item->product()->save($product);
-            $invoice->total_price += $product->price * $invoice_item->quantity ;
             $invoice->invoiceItems()->save($invoice_item);  
+            $invoice->total_price += $product->price * $invoice_item->quantity ;
+            $invoice->save();
         }
         if(Auth::user()->getHasCompanyProfileAttribute()){
             $company_invoice = new CompanyInvoice();
@@ -109,7 +121,7 @@ class InvoiceController extends Controller
         }else if(Auth::user()->getHasSellerProfileAttribute()){
             $seller_invoice = new SellerInvoice();
             $seller_invoice->invoice()->save($invoice);
-            Auth::user()->profile()->invoices()->save($seller_invoice);
+            Auth::user()->profile->invoices()->save($seller_invoice);
         }
         return response()->json(["message" =>  trans('invoice.created.successfull')], 201);
     }

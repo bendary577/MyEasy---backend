@@ -83,7 +83,7 @@ class ProductController extends Controller
             'available_number' => 'required|integer',
             'status' => 'required|in:new,used',
         ]);
-        if ($validator->fails()) {
+        if ($validator->fails()){
             return response()->json(['message' => $validator->errors()], 400);
         }
         if(Store::where('id', $store_id)->exists()){
@@ -130,7 +130,7 @@ class ProductController extends Controller
     /* -------------------------------------update one product -------------------------------------- */
     public function update(Request $request, $id)
     {
-        if (!Auth::user()->can('update_product')) {
+        if (!Auth::user()->can('update_product')){
             return response()->json(['message'=> trans('permission.permission.denied')], 401);
         }
         $validator = Validator::make($request->all(), [
