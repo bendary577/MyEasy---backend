@@ -17,6 +17,7 @@ use App\Models\InvoiceItem;
 
 class InvoiceController extends Controller
 {
+    
     /*
         getAll invoices
         getOne invoice
